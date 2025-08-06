@@ -16,6 +16,7 @@ interface EcoVerseState {
   updateSubmissionStatus: (id: string, status: Submission['status']) => void;
   updateLeaderboardPoints: () => void;
   getBadges: () => typeof BADGES;
+  logout: () => void;
 }
 
 const getLevel = (points: number) => {
@@ -151,6 +152,9 @@ export const useDataStore = create<EcoVerseState>()(
         });
       },
       getBadges: () => BADGES,
+      logout: () => {
+        set({ user: null, submissions: [], leaderboard: [] });
+      },
     }),
     {
       name: 'ecoverse-storage',

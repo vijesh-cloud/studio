@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useDataStore } from '@/hooks/use-data-store';
@@ -5,7 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
-import { BarChart3, Settings, Share2, Award, Recycle, Flame, Leaf, Droplets } from 'lucide-react';
+import { LogOut, Settings, Share2, Award, Recycle, Flame } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { LEVELS } from '@/lib/constants';
 import { AchievementBadge } from '@/components/AchievementBadge';
@@ -14,13 +15,11 @@ import {
   ChartTooltip,
   ChartTooltipContent,
   ChartConfig,
-  ChartLegend,
-  ChartLegendContent,
 } from '@/components/ui/chart';
 import { BarChart, CartesianGrid, XAxis, YAxis, Bar, Tooltip as RechartsTooltip, ResponsiveContainer } from 'recharts';
 
 export default function ProfilePage() {
-  const { user, getBadges } = useDataStore();
+  const { user, getBadges, logout } = useDataStore();
   const router = useRouter();
 
   if (!user) {
@@ -28,6 +27,11 @@ export default function ProfilePage() {
     return <div className="p-4 text-center">Loading user profile...</div>;
   }
   
+  const handleLogout = () => {
+    logout();
+    router.push('/login');
+  };
+
   const allBadges = getBadges();
 
   const currentLevel = LEVELS.find(l => l.level === user.level) || LEVELS[0];
@@ -126,6 +130,7 @@ export default function ProfilePage() {
       <div className="space-y-2">
         <Button variant="outline" className="w-full"><Share2 className="mr-2 h-4 w-4"/> Share Profile</Button>
         <Button variant="ghost" className="w-full"><Settings className="mr-2 h-4 w-4"/> Settings</Button>
+        <Button variant="destructive" className="w-full" onClick={handleLogout}><LogOut className="mr-2 h-4 w-4"/> Logout</Button>
       </div>
 
     </div>
