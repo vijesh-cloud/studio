@@ -3,9 +3,9 @@
 
 import { useState, useRef, useEffect, ChangeEvent, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Camera, MapPin, Upload, Loader2, CheckCircle, XCircle, Wand2, Sparkles, RefreshCw, AlertTriangle } from 'lucide-react';
+import { Camera, MapPin, Upload, Loader2, CheckCircle, XCircle, Wand2, Sparkles, RefreshCw, AlertTriangle, Edit } from 'lucide-react';
 import { LocationService } from '@/lib/location';
 import type { Location } from '@/lib/types';
 import { classifyItemAction } from '@/app/actions';
@@ -26,6 +26,9 @@ type ClassificationResult = {
 export default function CameraPage() {
   const [location, setLocation] = useState<Location | null>(null);
   const [locationLoading, setLocationLoading] = useState(true);
+  const [locationError, setLocationError] = useState(false);
+  const [manualLocation, setManualLocation] = useState('');
+  const [isEditingLocation, setIsEditingLocation] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [imageData, setImageData] = useState<string | null>(null);
   const [classifying, setClassifying] = useState(false);
@@ -79,15 +82,17 @@ export default function CameraPage() {
   useEffect(() => {
     async function fetchLocation() {
       setLocationLoading(true);
+      setLocationError(false);
       try {
         const { lat, lng } = await LocationService.getCurrentPosition();
         const { address, city } = LocationService.getAddress(lat, lng);
         const mapsURL = LocationService.generateGoogleMapsURL(lat, lng);
         setLocation({ lat, lng, address, city, mapsURL });
       } catch (error) {
+        setLocationError(true);
         toast({
-          title: 'Error getting location',
-          description: 'Please ensure location services are enabled.',
+          title: 'Could not get location',
+          description: 'Please enter your location manually.',
           variant: 'destructive',
         });
       } finally {
@@ -96,6 +101,25 @@ export default function CameraPage() {
     }
     fetchLocation();
   }, [toast]);
+
+  const handleManualLocationSubmit = () => {
+    if (manualLocation.trim()) {
+        // Mock location data for manual input
+        const mockLat = 40.7128;
+        const mockLng = -74.0060;
+        setLocation({
+            lat: mockLat,
+            lng: mockLng,
+            address: manualLocation,
+            city: manualLocation.split(',')[0] || 'Manual Location',
+            mapsURL: LocationService.generateGoogleMapsURL(mockLat, mockLng),
+        });
+        setLocationError(false);
+        setIsEditingLocation(false);
+    } else {
+        toast({ title: 'Please enter a location', variant: 'destructive'});
+    }
+  }
 
   const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -203,10 +227,29 @@ export default function CameraPage() {
       <Card className="bg-background/90 text-foreground backdrop-blur-sm fixed bottom-0 left-0 right-0 rounded-t-2xl">
         <CardHeader>
           <CardTitle>Submit for Recycling</CardTitle>
-          <div className="text-sm text-muted-foreground">
-            <div className="flex items-center text-sm mt-2">
-                <MapPin className="w-4 h-4 mr-2 text-primary" />
-                {locationLoading ? <Loader2 className="w-4 h-4 animate-spin"/> : <span>{location?.address || 'Location not found'}</span>}
+          <div className="text-sm text-muted-foreground mt-2">
+            <div className="flex items-center text-sm">
+                <MapPin className="w-4 h-4 mr-2 text-primary flex-shrink-0" />
+                {locationLoading ? <Loader2 className="w-4 h-4 animate-spin"/> : 
+                 locationError || isEditingLocation ? (
+                    <div className="flex gap-2 w-full">
+                        <Input 
+                            type="text" 
+                            placeholder="e.g. New York, NY" 
+                            value={manualLocation}
+                            onChange={(e) => setManualLocation(e.target.value)}
+                            className="text-sm"
+                        />
+                        <Button size="sm" onClick={handleManualLocationSubmit}>Set</Button>
+                    </div>
+                 ) : (
+                    <div className="flex justify-between items-center w-full">
+                        <span>{location?.address || 'Location not found'}</span>
+                        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setIsEditingLocation(true)}>
+                            <Edit className="h-3 w-3"/>
+                        </Button>
+                    </div>
+                 )}
             </div>
           </div>
         </CardHeader>
@@ -228,7 +271,7 @@ export default function CameraPage() {
                         <RefreshCw className="mr-2 h-4 w-4" /> Retake
                     </Button>
                     {!classification && (
-                        <Button className="w-full" onClick={handleClassify} disabled={classifying}>
+                        <Button className="w-full" onClick={handleClassify} disabled={classifying || locationError}>
                         {classifying ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Wand2 className="mr-2 h-4 w-4" />}
                         Classify
                         </Button>
@@ -259,7 +302,7 @@ export default function CameraPage() {
           )}
           
           {classification && (
-            <Button className="w-full" onClick={handleSubmit} disabled={submitting}>
+            <Button className="w-full" onClick={handleSubmit} disabled={submitting || locationError}>
               {submitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CheckCircle className="mr-2 h-4 w-4" />}
               Confirm & Submit
             </Button>
