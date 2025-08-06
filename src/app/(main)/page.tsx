@@ -47,7 +47,6 @@ export default function HomePage() {
           const tipsResult = await getTipsAction({ location: city, recyclingHistory });
           setTips(tipsResult.tips);
         } catch (error) {
-          console.error("Could not get location or tips", error);
           setTips('Remember to rinse containers before recycling!');
         }
       }
