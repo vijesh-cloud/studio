@@ -1,3 +1,4 @@
+
 export interface User {
   id: string;
   name: string;
@@ -11,6 +12,7 @@ export interface User {
   impactStats: {
     co2Saved: number; // in kg
     waterSaved: number; // in liters
+    volumeSaved: number; // in cubic meters
     treesEquivalent: number;
   };
 }

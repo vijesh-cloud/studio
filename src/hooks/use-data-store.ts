@@ -42,6 +42,7 @@ const generateFakeUsers = (count: number): User[] => {
       impactStats: {
         co2Saved: Math.random() * 5,
         waterSaved: Math.random() * 20,
+        volumeSaved: Math.random() * 0.1,
         treesEquivalent: Math.random() * 0.5,
       },
     };
@@ -66,7 +67,7 @@ export const useDataStore = create<EcoVerseState>()(
           lastRecycled: null,
           badges: [],
           totalItems: 0,
-          impactStats: { co2Saved: 0, waterSaved: 0, treesEquivalent: 0 },
+          impactStats: { co2Saved: 0, waterSaved: 0, volumeSaved: 0, treesEquivalent: 0 },
         };
         set({ user: newUser, leaderboard: [...generateFakeUsers(49), newUser] });
       },
@@ -117,6 +118,7 @@ export const useDataStore = create<EcoVerseState>()(
           impactStats: {
             co2Saved: user.impactStats.co2Saved + (POINTS_MAP[submissionData.itemType] / 50),
             waterSaved: user.impactStats.waterSaved + (POINTS_MAP[submissionData.itemType] / 2),
+            volumeSaved: user.impactStats.volumeSaved + (POINTS_MAP[submissionData.itemType] / 10000),
             treesEquivalent: user.impactStats.treesEquivalent + (POINTS_MAP[submissionData.itemType] / 1000),
           },
           badges: [...new Set([...user.badges, ...newBadges])],
