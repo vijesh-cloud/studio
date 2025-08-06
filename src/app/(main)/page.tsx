@@ -5,9 +5,6 @@ import { useEffect, useState } from 'react';
 import { useDataStore } from '@/hooks/use-data-store';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Award, Droplets, Leaf, Recycle, Flame, BarChart, History, Gift, ThumbsUp } from 'lucide-react';
 import { StatCard } from '@/components/StatCard';
 import Link from 'next/link';
@@ -17,24 +14,24 @@ import { getTipsAction } from '@/app/actions';
 import { LocationService } from '@/lib/location';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 
 export default function HomePage() {
-  const { user, setUser, submissions } = useDataStore();
-  const [name, setName] = useState('');
-  const [showWelcomeDialog, setShowWelcomeDialog] = useState(false);
+  const { user, submissions } = useDataStore();
   const [tips, setTips] = useState('');
   const [locationCity, setLocationCity] = useState('your city');
+  const router = useRouter();
 
   useEffect(() => {
     const checkUser = () => {
       if (!user) {
-        setShowWelcomeDialog(true);
+        router.push('/login');
       }
     };
     // Delay check to allow store hydration
     const timer = setTimeout(checkUser, 100);
     return () => clearTimeout(timer);
-  }, [user]);
+  }, [user, router]);
 
   useEffect(() => {
     async function fetchLocationAndTips() {
@@ -55,40 +52,14 @@ export default function HomePage() {
     fetchLocationAndTips();
   }, [user, submissions]);
 
-  const handleUserSetup = () => {
-    if (name.trim()) {
-      setUser(name.trim());
-      setShowWelcomeDialog(false);
-    }
-  };
-
   if (!user) {
     return (
-      <>
-        <Dialog open={showWelcomeDialog}>
-          <DialogContent className="sm:max-w-[425px]">
-            <DialogHeader>
-              <DialogTitle>Welcome to EcoVerse!</DialogTitle>
-              <DialogDescription>Let's make recycling a habit. What should we call you?</DialogDescription>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="name" className="text-right">Name</Label>
-                <Input id="name" value={name} onChange={(e) => setName(e.target.value)} className="col-span-3" />
-              </div>
-            </div>
-            <DialogFooter>
-              <Button onClick={handleUserSetup}>Get Started</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
         <div className="flex items-center justify-center h-screen">
           <div className="text-center">
             <Recycle className="mx-auto h-12 w-12 text-primary animate-spin" />
             <p className="mt-4 text-lg">Loading EcoVerse...</p>
           </div>
         </div>
-      </>
     );
   }
 
@@ -215,5 +186,3 @@ export default function HomePage() {
     </div>
   );
 }
-
-    
