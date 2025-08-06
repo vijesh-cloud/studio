@@ -203,12 +203,12 @@ export default function CameraPage() {
       <Card className="bg-background/90 text-foreground backdrop-blur-sm fixed bottom-0 left-0 right-0 rounded-t-2xl">
         <CardHeader>
           <CardTitle>Submit for Recycling</CardTitle>
-          <CardDescription>
+          <div className="text-sm text-muted-foreground">
             <div className="flex items-center text-sm mt-2">
                 <MapPin className="w-4 h-4 mr-2 text-primary" />
                 {locationLoading ? <Loader2 className="w-4 h-4 animate-spin"/> : <span>{location?.address || 'Location not found'}</span>}
             </div>
-          </CardDescription>
+          </div>
         </CardHeader>
         <CardContent className="space-y-4">
           
@@ -274,5 +274,3 @@ export default function CameraPage() {
     </div>
   );
 }
-
-    
