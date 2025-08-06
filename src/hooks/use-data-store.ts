@@ -149,7 +149,11 @@ export const useDataStore = create<EcoVerseState>()(
             const submissionToDelete = state.submissions.find(s => s.id === id);
             if (!submissionToDelete) return {};
 
-            // Subtract impact stats, but keep points
+            // Subtract points and impact stats
+            const pointsToDeduct = submissionToDelete.points;
+            const newPoints = user.points - pointsToDeduct;
+            const newLevel = getLevel(newPoints).level;
+            
             const newImpactStats: EnvironmentalImpact = {
                 co2Saved: user.impactStats.co2Saved - submissionToDelete.impact.co2Saved,
                 waterSaved: user.impactStats.waterSaved - submissionToDelete.impact.waterSaved,
@@ -159,8 +163,8 @@ export const useDataStore = create<EcoVerseState>()(
 
             const updatedUser: User = {
                 ...user,
-                points: user.points, // Keep the points
-                level: user.level, // Keep the level
+                points: newPoints,
+                level: newLevel,
                 totalItems: user.totalItems - 1,
                 impactStats: newImpactStats,
             };
