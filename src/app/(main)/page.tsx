@@ -114,7 +114,7 @@ export default function HomePage() {
               </div>
                <div>
                   <Box className="mx-auto h-8 w-8 text-yellow-600"/>
-                  <p className="font-bold text-lg">{user.impactStats.volumeSaved.toFixed(3)}m³</p>
+                  <p className="font-bold text-lg">{(user.impactStats.volumeSaved || 0).toFixed(3)}m³</p>
                   <p className="text-xs text-muted-foreground">Volume Saved</p>
               </div>
               <div>

@@ -43,7 +43,7 @@ export default function ProfilePage() {
   const chartData = [
     { name: 'CO2 Saved (kg)', value: user.impactStats.co2Saved.toFixed(2), fill: 'var(--color-co2)' },
     { name: 'Water Saved (L)', value: user.impactStats.waterSaved.toFixed(2), fill: 'var(--color-water)' },
-    { name: 'Volume (m³)', value: user.impactStats.volumeSaved.toFixed(3), fill: 'var(--color-volume)' },
+    { name: 'Volume (m³)', value: (user.impactStats.volumeSaved || 0).toFixed(3), fill: 'var(--color-volume)' },
     { name: 'Trees', value: user.impactStats.treesEquivalent.toFixed(3), fill: 'var(--color-trees)' },
   ];
 
