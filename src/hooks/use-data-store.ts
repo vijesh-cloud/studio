@@ -6,6 +6,7 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 import type { User, Submission, Location } from '@/lib/types';
 import { LEVELS, BADGES, POINTS_MAP } from '@/lib/constants';
 import { differenceInCalendarDays, isToday } from 'date-fns';
+import { getImpactAction } from '@/app/actions';
 
 interface EcoVerseState {
   user: User | null;
@@ -71,7 +72,7 @@ export const useDataStore = create<EcoVerseState>()(
         };
         set({ user: newUser, leaderboard: [...generateFakeUsers(49), newUser] });
       },
-      addSubmission: (submissionData, location) => {
+      addSubmission: async (submissionData, location) => {
         const user = get().user;
         if (!user) return;
 
@@ -107,6 +108,8 @@ export const useDataStore = create<EcoVerseState>()(
         const newSubmissions = [newSubmission, ...get().submissions];
 
         const newBadges = BADGES.filter(b => b.condition({ ...user, streak: newStreak }, newSubmissions)).map(b => b.id);
+        
+        const impact = await getImpactAction({ itemType: submissionData.itemType });
 
         const updatedUser: User = {
           ...user,
@@ -116,10 +119,10 @@ export const useDataStore = create<EcoVerseState>()(
           lastRecycled: now.toISOString(),
           totalItems: user.totalItems + 1,
           impactStats: {
-            co2Saved: user.impactStats.co2Saved + (POINTS_MAP[submissionData.itemType] / 50),
-            waterSaved: user.impactStats.waterSaved + (POINTS_MAP[submissionData.itemType] / 2),
-            volumeSaved: user.impactStats.volumeSaved + (POINTS_MAP[submissionData.itemType] / 10000),
-            treesEquivalent: user.impactStats.treesEquivalent + (POINTS_MAP[submissionData.itemType] / 1000),
+            co2Saved: user.impactStats.co2Saved + impact.co2Saved,
+            waterSaved: user.impactStats.waterSaved + impact.waterSaved,
+            volumeSaved: user.impactStats.volumeSaved + impact.volumeSaved,
+            treesEquivalent: user.impactStats.treesEquivalent + impact.treesEquivalent,
           },
           badges: [...new Set([...user.badges, ...newBadges])],
         };

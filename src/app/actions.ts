@@ -2,6 +2,7 @@
 
 import { classifyWasteItem, type ClassifyWasteItemInput, type ClassifyWasteItemOutput } from '@/ai/flows/ai-item-classification';
 import { getPersonalizedRecyclingTips, type PersonalizedRecyclingTipsInput, type PersonalizedRecyclingTipsOutput } from '@/ai/flows/personalized-recycling-tips';
+import { getEnvironmentalImpact, type EnvironmentalImpactInput, type EnvironmentalImpactOutput } from '@/ai/flows/environmental-impact';
 
 export async function classifyItemAction(
   input: ClassifyWasteItemInput
@@ -33,4 +34,21 @@ export async function getTipsAction(
       tips: 'Could not fetch tips at the moment. Remember to separate plastics and paper!',
     };
   }
+}
+
+export async function getImpactAction(
+  input: EnvironmentalImpactInput
+): Promise<EnvironmentalImpactOutput> {
+    try {
+        const result = await getEnvironmentalImpact(input);
+        return result;
+    } catch (error) {
+        console.error("Error in getImpactAction:", error);
+        return {
+            co2Saved: 0,
+            waterSaved: 0,
+            volumeSaved: 0,
+            treesEquivalent: 0
+        };
+    }
 }
