@@ -3,7 +3,7 @@
 
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import type { User, Submission, Location } from '@/lib/types';
+import type { User, Submission, Location, EnvironmentalImpact } from '@/lib/types';
 import { LEVELS, BADGES, POINTS_MAP } from '@/lib/constants';
 import { differenceInCalendarDays, isToday } from 'date-fns';
 import { getImpactAction } from '@/app/actions';
@@ -13,7 +13,7 @@ interface EcoVerseState {
   submissions: Submission[];
   leaderboard: User[];
   setUser: (name: string) => void;
-  addSubmission: (submissionData: Omit<Submission, 'id' | 'userId' | 'timestamp' | 'organizerId' | 'status'>, location: Location) => void;
+  addSubmission: (submissionData: Omit<Submission, 'id' | 'userId' | 'timestamp' | 'organizerId' | 'status' | 'impact'>, location: Location) => void;
   updateSubmissionStatus: (id: string, status: Submission['status']) => void;
   deleteSubmission: (id: string) => void;
   claimItem: (id: string) => void;
@@ -77,6 +77,8 @@ export const useDataStore = create<EcoVerseState>()(
       addSubmission: async (submissionData, location) => {
         const user = get().user;
         if (!user) return;
+        
+        const impact = await getImpactAction({ itemType: submissionData.itemType });
 
         const newSubmission: Submission = {
           ...submissionData,
@@ -86,6 +88,7 @@ export const useDataStore = create<EcoVerseState>()(
           organizerId: `org-${Math.floor(Math.random() * 10)}`,
           status: 'Submitted',
           location,
+          impact,
         };
 
         const now = new Date();
@@ -111,8 +114,6 @@ export const useDataStore = create<EcoVerseState>()(
 
         const newBadges = BADGES.filter(b => b.condition({ ...user, streak: newStreak }, newSubmissions)).map(b => b.id);
         
-        const impact = await getImpactAction({ itemType: submissionData.itemType });
-
         const updatedUser: User = {
           ...user,
           points: newPoints,
@@ -141,9 +142,38 @@ export const useDataStore = create<EcoVerseState>()(
         }));
       },
       deleteSubmission: (id) => {
-        set(state => ({
-          submissions: state.submissions.filter(s => s.id !== id)
-        }))
+        set(state => {
+            const user = state.user;
+            if (!user) return {};
+
+            const submissionToDelete = state.submissions.find(s => s.id === id);
+            if (!submissionToDelete) return {};
+
+            // Subtract points and impact stats
+            const newPoints = user.points - submissionToDelete.points;
+            const newImpactStats: EnvironmentalImpact = {
+                co2Saved: user.impactStats.co2Saved - submissionToDelete.impact.co2Saved,
+                waterSaved: user.impactStats.waterSaved - submissionToDelete.impact.waterSaved,
+                volumeSaved: (user.impactStats.volumeSaved || 0) - (submissionToDelete.impact.volumeSaved || 0),
+                treesEquivalent: user.impactStats.treesEquivalent - submissionToDelete.impact.treesEquivalent,
+            };
+
+            const updatedUser: User = {
+                ...user,
+                points: newPoints < 0 ? 0 : newPoints,
+                level: getLevel(newPoints).level,
+                totalItems: user.totalItems - 1,
+                impactStats: newImpactStats,
+            };
+            
+            const newSubmissions = state.submissions.filter(s => s.id !== id);
+
+            return {
+                user: updatedUser,
+                submissions: newSubmissions,
+                leaderboard: state.leaderboard.map(u => u.id === updatedUser.id ? updatedUser : u)
+            }
+        })
       },
       claimItem: (id: string) => {
         set(state => {

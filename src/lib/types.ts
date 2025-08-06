@@ -1,4 +1,12 @@
 
+
+export interface EnvironmentalImpact {
+  co2Saved: number; // in kg
+  waterSaved: number; // in liters
+  volumeSaved: number; // in cubic meters
+  treesEquivalent: number;
+}
+
 export interface User {
   id: string;
   name: string;
@@ -9,12 +17,7 @@ export interface User {
   lastRecycled: string | null;
   badges: string[];
   totalItems: number;
-  impactStats: {
-    co2Saved: number; // in kg
-    waterSaved: number; // in liters
-    volumeSaved: number; // in cubic meters
-    treesEquivalent: number;
-  };
+  impactStats: EnvironmentalImpact;
 }
 
 export interface Location {
@@ -39,6 +42,7 @@ export interface Submission {
   organizerId: string;
   funnyAIRoast?: string;
   recyclingSuggestion?: string;
+  impact: EnvironmentalImpact;
 }
 
 export interface Badge {
