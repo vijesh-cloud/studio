@@ -1,11 +1,11 @@
+
 'use client';
 
-import { useState, useRef, useEffect, ChangeEvent } from 'react';
+import { useState, useRef, useEffect, ChangeEvent, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Camera, MapPin, Upload, Loader2, CheckCircle, XCircle, Wand2, Sparkles } from 'lucide-react';
+import { Camera, MapPin, Upload, Loader2, CheckCircle, XCircle, Wand2, Sparkles, RefreshCw, AlertTriangle } from 'lucide-react';
 import { LocationService } from '@/lib/location';
 import type { Location } from '@/lib/types';
 import { classifyItemAction } from '@/app/actions';
@@ -14,6 +14,7 @@ import { useDataStore } from '@/hooks/use-data-store';
 import { useRouter } from 'next/navigation';
 import { POINTS_MAP } from '@/lib/constants';
 import Image from 'next/image';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 
 type ClassificationResult = {
   itemType: string;
@@ -30,7 +31,12 @@ export default function CameraPage() {
   const [classifying, setClassifying] = useState(false);
   const [classification, setClassification] = useState<ClassificationResult | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [hasCameraPermission, setHasCameraPermission] = useState(false);
+  
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
   const { toast } = useToast();
   const router = useRouter();
   const { addSubmission, user } = useDataStore();
@@ -42,6 +48,34 @@ export default function CameraPage() {
     }
   }, [user, router, toast]);
 
+  useEffect(() => {
+    const getCameraPermission = async () => {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+        setHasCameraPermission(true);
+
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+        }
+      } catch (error) {
+        setHasCameraPermission(false);
+        toast({
+          variant: 'destructive',
+          title: 'Camera Access Denied',
+          description: 'Please enable camera permissions in your browser settings to use this feature.',
+        });
+      }
+    };
+    getCameraPermission();
+    
+    return () => {
+        if (videoRef.current && videoRef.current.srcObject) {
+            const stream = videoRef.current.srcObject as MediaStream;
+            stream.getTracks().forEach(track => track.stop());
+        }
+    }
+  }, [toast]);
+  
   useEffect(() => {
     async function fetchLocation() {
       setLocationLoading(true);
@@ -75,6 +109,27 @@ export default function CameraPage() {
       };
       reader.readAsDataURL(file);
     }
+  };
+
+  const handleCapture = useCallback(() => {
+    if (videoRef.current && canvasRef.current) {
+        const video = videoRef.current;
+        const canvas = canvasRef.current;
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        const context = canvas.getContext('2d');
+        context?.drawImage(video, 0, 0, video.videoWidth, video.videoHeight);
+        const dataUrl = canvas.toDataURL('image/jpeg');
+        setImageData(dataUrl);
+        setImagePreview(dataUrl);
+        setClassification(null);
+    }
+  }, []);
+
+  const handleRetake = () => {
+    setImageData(null);
+    setImagePreview(null);
+    setClassification(null);
   };
 
   const handleClassify = async () => {
@@ -120,33 +175,30 @@ export default function CameraPage() {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-gray-900 text-white p-4">
-      <div className="flex-grow flex flex-col items-center justify-center space-y-4">
+    <div className="flex flex-col h-screen bg-gray-900 text-white">
+       <div className="flex-grow flex flex-col items-center justify-center space-y-4 relative p-4">
+        <canvas ref={canvasRef} className="hidden" />
         {imagePreview ? (
           <div className="w-full max-w-sm aspect-square relative rounded-lg overflow-hidden border-2 border-dashed border-gray-600">
             <Image src={imagePreview} alt="Preview" layout="fill" objectFit="cover" />
           </div>
         ) : (
-          <div className="w-full max-w-sm aspect-square flex flex-col items-center justify-center bg-gray-800 rounded-lg border-2 border-dashed border-gray-600">
-            <Camera className="w-16 h-16 text-gray-500" />
-            <p className="mt-2 text-sm text-gray-400">Capture or upload a photo</p>
+          <div className="w-full max-w-sm aspect-square flex flex-col items-center justify-center bg-gray-800 rounded-lg border-2 border-dashed border-gray-600 overflow-hidden">
+            <video ref={videoRef} className="w-full h-full object-cover" autoPlay muted playsInline />
           </div>
         )}
 
-        <div className="flex space-x-4">
-          <Button variant="outline" onClick={() => fileInputRef.current?.click()}>
-            <Upload className="mr-2 h-4 w-4" /> Upload
-          </Button>
-          <Input
-            type="file"
-            accept="image/*"
-            capture="environment"
-            ref={fileInputRef}
-            onChange={handleFileChange}
-            className="hidden"
-          />
-        </div>
+        { !hasCameraPermission && !imagePreview && (
+          <Alert variant="destructive" className="max-w-sm">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertTitle>Camera Access Required</AlertTitle>
+            <AlertDescription>
+              Please allow camera access to use this feature. You can still upload a photo manually.
+            </AlertDescription>
+          </Alert>
+        )}
       </div>
+
 
       <Card className="bg-background/90 text-foreground backdrop-blur-sm fixed bottom-0 left-0 right-0 rounded-t-2xl">
         <CardHeader>
@@ -159,6 +211,39 @@ export default function CameraPage() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
+          
+          <div className="grid grid-cols-2 gap-4">
+            {!imagePreview ? (
+                <>
+                    <Button variant="outline" onClick={() => fileInputRef.current?.click()} className="w-full">
+                        <Upload className="mr-2 h-4 w-4" /> Upload
+                    </Button>
+                    <Button onClick={handleCapture} disabled={!hasCameraPermission} className="w-full">
+                        <Camera className="mr-2 h-4 w-4" /> Capture
+                    </Button>
+                </>
+            ) : (
+                <>
+                    <Button variant="outline" onClick={handleRetake} className="w-full">
+                        <RefreshCw className="mr-2 h-4 w-4" /> Retake
+                    </Button>
+                    {!classification && (
+                        <Button className="w-full" onClick={handleClassify} disabled={classifying}>
+                        {classifying ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Wand2 className="mr-2 h-4 w-4" />}
+                        Classify
+                        </Button>
+                    )}
+                </>
+            )}
+            <Input
+              type="file"
+              accept="image/*"
+              ref={fileInputRef}
+              onChange={handleFileChange}
+              className="hidden"
+            />
+          </div>
+
           {classification && (
             <Card className="bg-accent/20">
               <CardContent className="p-4 space-y-2">
@@ -172,14 +257,7 @@ export default function CameraPage() {
               </CardContent>
             </Card>
           )}
-
-          {!classification && imageData && (
-            <Button className="w-full" onClick={handleClassify} disabled={classifying}>
-              {classifying ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Wand2 className="mr-2 h-4 w-4" />}
-              Classify Item
-            </Button>
-          )}
-
+          
           {classification && (
             <Button className="w-full" onClick={handleSubmit} disabled={submitting}>
               {submitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CheckCircle className="mr-2 h-4 w-4" />}
@@ -196,3 +274,5 @@ export default function CameraPage() {
     </div>
   );
 }
+
+    

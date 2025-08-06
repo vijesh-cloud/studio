@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -122,7 +123,12 @@ export default function HomePage() {
       
       <Card>
           <CardHeader>
-              <CardTitle className="flex items-center gap-2"><Leaf className="text-primary"/> Environmental Impact</CardTitle>
+            <CardTitle>
+              <div className="flex items-center gap-2">
+                <Leaf className="text-primary" />
+                <span>Environmental Impact</span>
+              </div>
+            </CardTitle>
           </CardHeader>
           <CardContent className="grid grid-cols-3 gap-4 text-center">
               <div>
@@ -154,7 +160,12 @@ export default function HomePage() {
 
        <Card>
         <CardHeader>
-            <CardTitle className="flex items-center gap-2"><Gift className="text-primary"/> Eco-Tips & Challenges</CardTitle>
+          <CardTitle>
+            <div className="flex items-center gap-2">
+              <Gift className="text-primary" />
+              <span>Eco-Tips & Challenges</span>
+            </div>
+          </CardTitle>
         </CardHeader>
         <CardContent>
             <p className="text-sm italic text-muted-foreground">{tips || "Loading tips..."}</p>
@@ -167,7 +178,12 @@ export default function HomePage() {
       
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2"><History className="text-primary"/> Recent Activity</CardTitle>
+          <CardTitle>
+            <div className="flex items-center gap-2">
+              <History className="text-primary" />
+              <span>Recent Activity</span>
+            </div>
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <ScrollArea className="h-[200px] w-full">
@@ -199,3 +215,5 @@ export default function HomePage() {
     </div>
   );
 }
+
+    

@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useDataStore } from '@/hooks/use-data-store';
@@ -44,7 +45,12 @@ export default function LeaderboardPage() {
       
       <Card className="bg-accent/30">
         <CardHeader className="p-4">
-            <CardTitle className="flex items-center gap-2 text-base"><Gift className="text-primary"/> Weekly Challenge</CardTitle>
+          <CardTitle>
+            <div className="flex items-center gap-2 text-base">
+              <Gift className="text-primary" />
+              <span>Weekly Challenge</span>
+            </div>
+          </CardTitle>
             <CardDescription className="text-sm">Recycle 3 plastic bottles and 2 paper items this week for a 100 point bonus!</CardDescription>
         </CardHeader>
       </Card>
@@ -68,3 +74,5 @@ export default function LeaderboardPage() {
     </div>
   );
 }
+
+    
