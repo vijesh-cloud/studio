@@ -51,7 +51,6 @@ export default function CameraPage() {
         const mapsURL = LocationService.generateGoogleMapsURL(lat, lng);
         setLocation({ lat, lng, address, city, mapsURL });
       } catch (error) {
-        console.error(error);
         toast({
           title: 'Error getting location',
           description: 'Please ensure location services are enabled.',
