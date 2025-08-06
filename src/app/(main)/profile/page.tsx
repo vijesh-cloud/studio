@@ -6,8 +6,9 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
-import { LogOut, Settings, Share2, Award, Recycle, Flame } from 'lucide-react';
+import { LogOut, Settings, Share2, Award, Recycle, Flame, History } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { LEVELS } from '@/lib/constants';
 import { AchievementBadge } from '@/components/AchievementBadge';
 import {
@@ -130,6 +131,9 @@ export default function ProfilePage() {
       </Card>
 
       <div className="space-y-2">
+        <Link href="/history">
+            <Button variant="outline" className="w-full"><History className="mr-2 h-4 w-4"/> View History</Button>
+        </Link>
         <Button variant="outline" className="w-full"><Share2 className="mr-2 h-4 w-4"/> Share Profile</Button>
         <Button variant="ghost" className="w-full"><Settings className="mr-2 h-4 w-4"/> Settings</Button>
         <Button variant="destructive" className="w-full" onClick={handleLogout}><LogOut className="mr-2 h-4 w-4"/> Logout</Button>

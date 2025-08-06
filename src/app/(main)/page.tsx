@@ -71,21 +71,23 @@ export default function HomePage() {
 
   return (
     <div className="p-4 space-y-6">
-      <Card className="bg-gradient-to-br from-primary to-secondary text-primary-foreground border-none shadow-xl">
-        <CardHeader>
-          <CardTitle>Hello, {user.name}!</CardTitle>
-          <CardDescription className="text-primary-foreground/80">
-            Ready to make {locationCity} greener today?
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-2">
-            <div className="flex justify-between items-center text-sm">
-                <span>{currentLevel.name} (Lvl {user.level})</span>
-                {nextLevel && <span>{user.points}/{nextLevel.minPoints}</span>}
-            </div>
-            <Progress value={levelProgress} className="w-full [&>div]:bg-accent" />
-        </CardContent>
-      </Card>
+      <Link href="/profile">
+        <Card className="bg-gradient-to-br from-primary to-secondary text-primary-foreground border-none shadow-xl hover:shadow-2xl transition-shadow">
+          <CardHeader>
+            <CardTitle>Hello, {user.name}!</CardTitle>
+            <CardDescription className="text-primary-foreground/80">
+              Ready to make {locationCity} greener today?
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-2">
+              <div className="flex justify-between items-center text-sm">
+                  <span>{currentLevel.name} (Lvl {user.level})</span>
+                  {nextLevel && <span>{user.points}/{nextLevel.minPoints}</span>}
+              </div>
+              <Progress value={levelProgress} className="w-full [&>div]:bg-accent" />
+          </CardContent>
+        </Card>
+      </Link>
 
       <div className="grid gap-4 md:grid-cols-2 grid-cols-2">
         <StatCard icon={Award} title="Total Points" value={user.points} />
