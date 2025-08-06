@@ -82,13 +82,17 @@ export default function RegisterPage() {
           variant: "destructive",
         });
       }
-    } catch (error) {
-      console.error("Google Sign-In Error:", error);
-      toast({
-        title: "Registration Failed",
-        description: "An error occurred during Google sign-in. Please try again.",
-        variant: "destructive",
-      });
+    } catch (error: any) {
+      if (error.code === 'auth/cancelled-popup-request') {
+        console.log("Google Sign-In cancelled by user.");
+      } else {
+        console.error("Google Sign-In Error:", error);
+        toast({
+          title: "Registration Failed",
+          description: "An error occurred during Google sign-in. Please try again.",
+          variant: "destructive",
+        });
+      }
     }
   };
 
