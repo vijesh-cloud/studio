@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import { useDataStore } from '@/hooks/use-data-store';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Award, Droplets, Leaf, Recycle, Flame, BarChart, History, Gift, ThumbsUp, Box } from 'lucide-react';
+import { Award, Droplets, Leaf, Recycle, Flame, BarChart, History, Gift, ThumbsUp, Box, ShoppingBag } from 'lucide-react';
 import { StatCard } from '@/components/StatCard';
 import Link from 'next/link';
 import { Progress } from '@/components/ui/progress';
@@ -131,8 +131,8 @@ export default function HomePage() {
         <Link href="/camera">
             <Button className="w-full h-16 text-lg" size="lg"><Recycle className="mr-2"/> Recycle Now</Button>
         </Link>
-        <Link href="/leaderboard">
-            <Button variant="outline" className="w-full h-16 text-lg" size="lg"><BarChart className="mr-2"/> Leaderboard</Button>
+        <Link href="/market">
+            <Button variant="outline" className="w-full h-16 text-lg" size="lg"><ShoppingBag className="mr-2"/> Marketplace</Button>
         </Link>
       </div>
 

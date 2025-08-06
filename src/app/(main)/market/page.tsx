@@ -30,6 +30,8 @@ export default function MarketPage() {
         className: 'bg-primary text-primary-foreground'
     });
   }
+  
+  const communitySubmissions = submissions.filter(s => s.userId !== user?.id);
 
   return (
     <div className="p-4 space-y-6">
@@ -47,7 +49,7 @@ export default function MarketPage() {
 
       <ScrollArea className="h-[calc(100vh-12rem)]">
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4 pr-4">
-          {submissions.map(item => (
+          {communitySubmissions.map(item => (
             <Card key={item.id} className="overflow-hidden">
                 <div className="relative w-full h-32">
                     <Image src={item.photo} alt={item.itemType} layout="fill" objectFit="cover" />
@@ -60,11 +62,11 @@ export default function MarketPage() {
             </Card>
           ))}
         </div>
-        {submissions.length === 0 && (
+        {communitySubmissions.length === 0 && (
             <div className="text-center text-muted-foreground pt-16">
                 <ShoppingBag className="mx-auto h-12 w-12" />
                 <h3 className="mt-4 text-lg font-semibold">Market is Empty</h3>
-                <p className="mt-1 text-sm">Recycle items to see them here!</p>
+                <p className="mt-1 text-sm">Community items will appear here!</p>
             </div>
         )}
       </ScrollArea>
