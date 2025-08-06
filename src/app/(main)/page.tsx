@@ -104,22 +104,22 @@ export default function HomePage() {
           <CardContent className="grid grid-cols-4 gap-4 text-center">
               <div>
                   <Droplets className="mx-auto h-8 w-8 text-blue-500"/>
-                  <p className="font-bold text-lg">{(user.impactStats.waterSaved || 0).toFixed(1)}L</p>
+                  <p className="font-bold text-lg">{user.impactStats.waterSaved.toFixed(1)}L</p>
                   <p className="text-xs text-muted-foreground">Water Saved</p>
               </div>
               <div>
                   <Recycle className="mx-auto h-8 w-8 text-gray-500"/>
-                  <p className="font-bold text-lg">{(user.impactStats.co2Saved || 0).toFixed(1)}kg</p>
+                  <p className="font-bold text-lg">{user.impactStats.co2Saved.toFixed(1)}kg</p>
                   <p className="text-xs text-muted-foreground">CO2 Reduced</p>
               </div>
                <div>
                   <Box className="mx-auto h-8 w-8 text-yellow-600"/>
-                  <p className="font-bold text-lg">{(user.impactStats.volumeSaved || 0).toFixed(3)}m³</p>
+                  <p className="font-bold text-lg">{user.impactStats.volumeSaved.toFixed(3)}m³</p>
                   <p className="text-xs text-muted-foreground">Volume Saved</p>
               </div>
               <div>
                   <Leaf className="mx-auto h-8 w-8 text-green-500"/>
-                  <p className="font-bold text-lg">{(user.impactStats.treesEquivalent || 0).toFixed(3)}</p>
+                  <p className="font-bold text-lg">{user.impactStats.treesEquivalent.toFixed(3)}</p>
                   <p className="text-xs text-muted-foreground">Trees Saved</p>
               </div>
           </CardContent>
