@@ -1,6 +1,6 @@
 'use client';
 
-import { Home, Trophy, History, User, Camera } from 'lucide-react';
+import { Home, Trophy, Camera, ShoppingBag, Package } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
@@ -9,8 +9,8 @@ const navItems = [
   { href: '/', icon: Home, label: 'Home' },
   { href: '/leaderboard', icon: Trophy, label: 'Leaders' },
   { href: '/camera', icon: Camera, label: 'Recycle', isCentral: true },
-  { href: '/history', icon: History, label: 'History' },
-  { href: '/profile', icon: User, label: 'Profile' },
+  { href: '/market', icon: ShoppingBag, label: 'Market' },
+  { href: '/products', icon: Package, label: 'My Items' },
 ];
 
 export function BottomNav() {

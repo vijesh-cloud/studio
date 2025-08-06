@@ -15,6 +15,7 @@ interface EcoVerseState {
   setUser: (name: string) => void;
   addSubmission: (submissionData: Omit<Submission, 'id' | 'userId' | 'timestamp' | 'organizerId' | 'status'>, location: Location) => void;
   updateSubmissionStatus: (id: string, status: Submission['status']) => void;
+  deleteSubmission: (id: string) => void;
   updateLeaderboardPoints: () => void;
   getBadges: () => typeof BADGES;
   logout: () => void;
@@ -121,7 +122,7 @@ export const useDataStore = create<EcoVerseState>()(
           impactStats: {
             co2Saved: user.impactStats.co2Saved + impact.co2Saved,
             waterSaved: user.impactStats.waterSaved + impact.waterSaved,
-            volumeSaved: user.impactStats.volumeSaved + impact.volumeSaved,
+            volumeSaved: (user.impactStats.volumeSaved || 0) + impact.volumeSaved,
             treesEquivalent: user.impactStats.treesEquivalent + impact.treesEquivalent,
           },
           badges: [...new Set([...user.badges, ...newBadges])],
@@ -137,6 +138,11 @@ export const useDataStore = create<EcoVerseState>()(
         set(state => ({
             submissions: state.submissions.map(s => s.id === id ? {...s, status} : s)
         }));
+      },
+      deleteSubmission: (id) => {
+        set(state => ({
+          submissions: state.submissions.filter(s => s.id !== id)
+        }))
       },
       updateLeaderboardPoints: () => {
         set(state => {
