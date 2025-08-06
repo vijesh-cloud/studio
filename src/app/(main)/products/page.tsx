@@ -1,67 +1,74 @@
 
+
 'use client';
 
 import { useDataStore } from '@/hooks/use-data-store';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Package, Trash2, Inbox } from 'lucide-react';
+import { ShoppingBag, Coins } from 'lucide-react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
+import { useToast } from '@/hooks/use-toast';
 
-export default function MyProductsPage() {
-  const { user, submissions, deleteSubmission } = useDataStore();
+export default function MarketplacePage() {
+  const { user, submissions, claimItem } = useDataStore();
   const router = useRouter();
+  const { toast } = useToast();
 
   useEffect(() => {
     if (!user) {
       router.push('/');
     }
   }, [user, router]);
-  
-  const userSubmissions = submissions.filter(s => s.userId === user?.id)
-    .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+
+  const handleClaim = (itemId: string, itemType: string) => {
+    claimItem(itemId);
+    toast({
+        title: "Item Claimed!",
+        description: `You've claimed the ${itemType} and earned 10 Green Coins!`,
+        className: 'bg-primary text-primary-foreground'
+    });
+  }
 
   return (
     <div className="p-4 space-y-6">
       <Card>
         <CardHeader>
           <CardTitle>
-             <div className="flex items-center gap-2">
-                <Package className="text-primary"/>
-                <span>My Products</span>
+            <div className="flex items-center gap-2">
+                <ShoppingBag className="text-primary"/>
+                <span>Marketplace</span>
             </div>
           </CardTitle>
-          <CardDescription>View and manage the items you have uploaded for recycling.</CardDescription>
+          <CardDescription>Browse items recycled by the community. Give them a new life for free!</CardDescription>
         </CardHeader>
       </Card>
 
-      {userSubmissions.length > 0 ? (
-        <ScrollArea className="h-[calc(100vh-12rem)]">
-          <div className="space-y-4 pr-4">
-            {userSubmissions.map(sub => (
-              <Card key={sub.id} className="flex items-center p-3 gap-4">
-                <Image src={sub.photo} alt={sub.itemType} width={64} height={64} className="rounded-md object-cover w-16 h-16" />
-                <div className="flex-grow">
-                    <p className="font-bold capitalize">{sub.itemType}</p>
-                    <p className="text-xs text-muted-foreground">{new Date(sub.timestamp).toLocaleDateString()}</p>
-                    <p className="text-sm font-semibold text-primary">+{sub.points} pts</p>
+      <ScrollArea className="h-[calc(100vh-12rem)]">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 pr-4">
+          {submissions.map(item => (
+            <Card key={item.id} className="overflow-hidden">
+                <div className="relative w-full h-32">
+                    <Image src={item.photo} alt={item.itemType} layout="fill" objectFit="cover" />
                 </div>
-                <Button variant="destructive" size="icon" onClick={() => deleteSubmission(sub.id)}>
-                    <Trash2 className="w-4 h-4"/>
-                </Button>
-              </Card>
-            ))}
-          </div>
-        </ScrollArea>
-      ) : (
-        <div className="text-center text-muted-foreground pt-16">
-          <Inbox className="mx-auto h-12 w-12" />
-          <h3 className="mt-4 text-lg font-semibold">No Products Yet</h3>
-          <p className="mt-1 text-sm">Recycle an item to see it here!</p>
+                <CardContent className="p-3">
+                    <h3 className="font-semibold capitalize truncate">{item.itemType}</h3>
+                    <p className="text-xs text-muted-foreground">{item.location.city}</p>
+                    <Button className="w-full mt-2" size="sm" onClick={() => handleClaim(item.id, item.itemType)}>Claim Item</Button>
+                </CardContent>
+            </Card>
+          ))}
         </div>
-      )}
+        {submissions.length === 0 && (
+            <div className="text-center text-muted-foreground pt-16">
+                <ShoppingBag className="mx-auto h-12 w-12" />
+                <h3 className="mt-4 text-lg font-semibold">Market is Empty</h3>
+                <p className="mt-1 text-sm">Recycle items to see them here!</p>
+            </div>
+        )}
+      </ScrollArea>
     </div>
   );
 }
