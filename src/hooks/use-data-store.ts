@@ -144,16 +144,17 @@ export const useDataStore = create<EcoVerseState>()(
       deleteSubmission: (id) => {
         set(state => {
             const user = state.user;
-            if (!user) return {};
+            if (!user) return state;
 
             const submissionToDelete = state.submissions.find(s => s.id === id);
-            if (!submissionToDelete) return {};
+            if (!submissionToDelete) return state;
 
-            // Subtract points and impact stats
+            // Subtract points and recalculate level
             const pointsToDeduct = submissionToDelete.points;
             const newPoints = user.points - pointsToDeduct;
             const newLevel = getLevel(newPoints).level;
             
+            // Subtract impact stats
             const newImpactStats: EnvironmentalImpact = {
                 co2Saved: user.impactStats.co2Saved - submissionToDelete.impact.co2Saved,
                 waterSaved: user.impactStats.waterSaved - submissionToDelete.impact.waterSaved,
@@ -170,13 +171,15 @@ export const useDataStore = create<EcoVerseState>()(
             };
             
             const newSubmissions = state.submissions.filter(s => s.id !== id);
+            const newLeaderboard = state.leaderboard.map(u => u.id === updatedUser.id ? updatedUser : u);
 
             return {
+                ...state,
                 user: updatedUser,
                 submissions: newSubmissions,
-                leaderboard: state.leaderboard.map(u => u.id === updatedUser.id ? updatedUser : u)
-            }
-        })
+                leaderboard: newLeaderboard,
+            };
+        });
       },
       claimItem: (id: string) => {
         set(state => {
