@@ -6,7 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
-import { LogOut, Settings, Share2, Award, Recycle, Flame, History } from 'lucide-react';
+import { LogOut, Settings, Share2, Award, Recycle, Flame, History, Coins } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { LEVELS } from '@/lib/constants';
@@ -76,7 +76,7 @@ export default function ProfilePage() {
         </div>
       </Card>
 
-      <div className="grid grid-cols-3 gap-2 text-center">
+      <div className="grid grid-cols-4 gap-2 text-center">
         <Card>
             <CardContent className="p-3">
                 <Recycle className="mx-auto h-6 w-6 mb-1 text-primary"/>
@@ -96,6 +96,13 @@ export default function ProfilePage() {
                 <Award className="mx-auto h-6 w-6 mb-1 text-yellow-500"/>
                 <p className="font-bold text-lg">{user.badges.length}</p>
                 <p className="text-xs text-muted-foreground">Badges</p>
+            </CardContent>
+        </Card>
+        <Card>
+            <CardContent className="p-3">
+                <Coins className="mx-auto h-6 w-6 mb-1 text-green-500"/>
+                <p className="font-bold text-lg">{user.points}</p>
+                <p className="text-xs text-muted-foreground">Green Coins</p>
             </CardContent>
         </Card>
       </div>

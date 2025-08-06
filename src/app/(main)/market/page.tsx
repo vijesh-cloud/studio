@@ -5,14 +5,14 @@ import { useDataStore } from '@/hooks/use-data-store';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { ShoppingBag } from 'lucide-react';
+import { ShoppingBag, Coins } from 'lucide-react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 
 export default function MarketPage() {
-  const { user, submissions } = useDataStore();
+  const { user, submissions, claimItem } = useDataStore();
   const router = useRouter();
   const { toast } = useToast();
 
@@ -22,10 +22,11 @@ export default function MarketPage() {
     }
   }, [user, router]);
 
-  const handleBuy = (itemName: string) => {
+  const handleClaim = (itemId: string, itemType: string) => {
+    claimItem(itemId);
     toast({
-        title: "Purchase Successful!",
-        description: `You've bought a ${itemName}. This is a demo and no real transaction has occurred.`,
+        title: "Item Claimed!",
+        description: `You've claimed the ${itemType} and earned 10 Green Coins!`,
         className: 'bg-primary text-primary-foreground'
     });
   }
@@ -40,7 +41,7 @@ export default function MarketPage() {
                 <span>Marketplace</span>
             </div>
           </CardTitle>
-          <CardDescription>Browse items recycled by the community. Give them a new life!</CardDescription>
+          <CardDescription>Browse items recycled by the community. Give them a new life for free!</CardDescription>
         </CardHeader>
       </Card>
 
@@ -54,8 +55,7 @@ export default function MarketPage() {
                 <CardContent className="p-3">
                     <h3 className="font-semibold capitalize truncate">{item.itemType}</h3>
                     <p className="text-xs text-muted-foreground">{item.location.city}</p>
-                    <p className="text-lg font-bold text-primary mt-1">${(item.points * 0.1).toFixed(2)}</p>
-                    <Button className="w-full mt-2" size="sm" onClick={() => handleBuy(item.itemType)}>Buy Now</Button>
+                    <Button className="w-full mt-2" size="sm" onClick={() => handleClaim(item.id, item.itemType)}>Claim Item</Button>
                 </CardContent>
             </Card>
           ))}

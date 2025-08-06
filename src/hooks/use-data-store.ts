@@ -16,6 +16,7 @@ interface EcoVerseState {
   addSubmission: (submissionData: Omit<Submission, 'id' | 'userId' | 'timestamp' | 'organizerId' | 'status'>, location: Location) => void;
   updateSubmissionStatus: (id: string, status: Submission['status']) => void;
   deleteSubmission: (id: string) => void;
+  claimItem: (id: string) => void;
   updateLeaderboardPoints: () => void;
   getBadges: () => typeof BADGES;
   logout: () => void;
@@ -143,6 +144,33 @@ export const useDataStore = create<EcoVerseState>()(
         set(state => ({
           submissions: state.submissions.filter(s => s.id !== id)
         }))
+      },
+      claimItem: (id: string) => {
+        set(state => {
+            const user = state.user;
+            if (!user) return {};
+
+            const submissionToClaim = state.submissions.find(s => s.id === id);
+            if (!submissionToClaim) return {};
+            
+            // Award 10 points (Green Coins) to the user claiming the item
+            const newPoints = user.points + 10;
+            const newLevel = getLevel(newPoints).level;
+            const updatedUser: User = {
+                ...user,
+                points: newPoints,
+                level: newLevel,
+            };
+            
+            // Remove the claimed item from the submissions list
+            const newSubmissions = state.submissions.filter(s => s.id !== id);
+            
+            return {
+                user: updatedUser,
+                submissions: newSubmissions,
+                leaderboard: state.leaderboard.map(u => u.id === updatedUser.id ? updatedUser : u)
+            };
+        });
       },
       updateLeaderboardPoints: () => {
         set(state => {
