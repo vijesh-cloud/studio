@@ -10,7 +10,7 @@ import { Gift, Users, Globe } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 export default function LeaderboardPage() {
-  const { user, leaderboard, submissions } = useDataStore();
+  const { user, leaderboard, submissions, updateLeaderboardPoints } = useDataStore();
   const router = useRouter();
   const [currentUserCity, setCurrentUserCity] = useState('Global');
 
@@ -24,14 +24,30 @@ export default function LeaderboardPage() {
       }
   }, [user, router, submissions]);
 
+  useEffect(() => {
+    const interval = setInterval(() => {
+      updateLeaderboardPoints();
+    }, 5000); // Update points every 5 seconds
+
+    return () => clearInterval(interval);
+  }, [updateLeaderboardPoints]);
+
   if (!user) {
     return <div className="p-4 text-center">Loading leaderboard...</div>;
   }
   
-  // For demo purposes, we will filter the mock leaderboard data.
-  // In a real app, this would be handled by the backend.
-  const neighborhoodUsers = leaderboard.filter(u => u.id === user.id || Math.random() > 0.5).slice(0, 15);
-  const cityUsers = leaderboard.filter(u => u.id === user.id || Math.random() > 0.2);
+  // Neighborhood: A smaller, more stable group including the current user
+  const currentUserIndex = leaderboard.findIndex(u => u.id === user.id);
+  const start = Math.max(0, currentUserIndex - 4);
+  const end = Math.min(leaderboard.length, start + 8);
+  const neighborhoodUsers = leaderboard.slice(start, end);
+  if (!neighborhoodUsers.some(u => u.id === user.id)) {
+      neighborhoodUsers.push(user);
+  }
+
+  // City & Global are the full list, which will be dynamic
+  const cityUsers = leaderboard;
+  const globalUsers = leaderboard;
 
 
   return (
@@ -68,7 +84,7 @@ export default function LeaderboardPage() {
             <LeaderboardList users={cityUsers} currentUser={user} category={currentUserCity}/>
         </TabsContent>
         <TabsContent value="global" className="mt-4">
-            <LeaderboardList users={leaderboard} currentUser={user} category="the world"/>
+            <LeaderboardList users={globalUsers} currentUser={user} category="the world"/>
         </TabsContent>
       </Tabs>
     </div>

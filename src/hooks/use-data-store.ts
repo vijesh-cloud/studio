@@ -1,3 +1,4 @@
+
 'use client';
 
 import { create } from 'zustand';
@@ -13,6 +14,7 @@ interface EcoVerseState {
   setUser: (name: string) => void;
   addSubmission: (submissionData: Omit<Submission, 'id' | 'userId' | 'timestamp' | 'organizerId' | 'status'>, location: Location) => void;
   updateSubmissionStatus: (id: string, status: Submission['status']) => void;
+  updateLeaderboardPoints: () => void;
   getBadges: () => typeof BADGES;
 }
 
@@ -129,6 +131,24 @@ export const useDataStore = create<EcoVerseState>()(
         set(state => ({
             submissions: state.submissions.map(s => s.id === id ? {...s, status} : s)
         }));
+      },
+      updateLeaderboardPoints: () => {
+        set(state => {
+          const { user, leaderboard } = state;
+          if (!user) return {};
+          
+          const newLeaderboard = leaderboard.map(u => {
+            if (u.id === user.id) {
+              return u; // Don't change the real user's points
+            }
+            // Add a small random amount to each fake user's points
+            const newPoints = u.points + Math.floor(Math.random() * 5);
+            const newLevel = getLevel(newPoints).level;
+            return { ...u, points: newPoints, level: newLevel };
+          });
+          
+          return { leaderboard: newLeaderboard };
+        });
       },
       getBadges: () => BADGES,
     }),
