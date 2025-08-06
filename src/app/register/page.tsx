@@ -18,6 +18,8 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useDataStore } from '@/hooks/use-data-store';
 import { useToast } from '@/hooks/use-toast';
+import { auth } from '@/lib/firebase';
+import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 
 const GoogleIcon = (props: React.SVGProps<SVGSVGElement>) => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="24px" height="24px" {...props}>
@@ -60,6 +62,36 @@ export default function RegisterPage() {
     }
   };
 
+  const handleGoogleRegister = async () => {
+    try {
+      const provider = new GoogleAuthProvider();
+      const result = await signInWithPopup(auth, provider);
+      const user = result.user;
+      if (user.displayName) {
+        setUser(user.displayName);
+        router.push('/');
+        toast({
+          title: "Registration Successful!",
+          description: `Welcome to EcoVerse, ${user.displayName}!`,
+          className: "bg-primary text-primary-foreground",
+        });
+      } else {
+        toast({
+          title: "Registration Failed",
+          description: "Could not get user information from Google.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Google Sign-In Error:", error);
+      toast({
+        title: "Registration Failed",
+        description: "An error occurred during Google sign-in. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div className="flex items-center justify-center min-h-screen bg-muted/40">
       <div className="w-full max-w-md p-4">
@@ -84,7 +116,7 @@ export default function RegisterPage() {
                 </span>
               </div>
             </div>
-             <Button variant="outline" className="w-full">
+             <Button variant="outline" className="w-full" onClick={handleGoogleRegister}>
               <GoogleIcon className="mr-2 h-4 w-4" />
               Register with Google
             </Button>
