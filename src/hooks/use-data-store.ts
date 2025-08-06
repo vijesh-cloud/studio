@@ -8,11 +8,17 @@ import { LEVELS, BADGES, POINTS_MAP } from '@/lib/constants';
 import { differenceInCalendarDays, isToday } from 'date-fns';
 import { getImpactAction } from '@/app/actions';
 
+interface StoredUser extends User {
+    email: string;
+}
 interface EcoVerseState {
   user: User | null;
+  registeredUsers: StoredUser[];
   submissions: Submission[];
   leaderboard: User[];
-  setUser: (name: string) => void;
+  setUser: (name: string, email: string) => void;
+  loginUser: (email: string) => boolean;
+  registerUser: (name: string, email: string) => void;
   addSubmission: (submissionData: Omit<Submission, 'id' | 'userId' | 'timestamp' | 'organizerId' | 'status' | 'impact'>, location: Location) => void;
   updateSubmissionStatus: (id: string, status: Submission['status']) => void;
   deleteSubmission: (id: string) => void;
@@ -59,10 +65,17 @@ export const useDataStore = create<EcoVerseState>()(
       user: null,
       submissions: [],
       leaderboard: [],
-      setUser: (name) => {
-        const newUser: User = {
+      registeredUsers: [],
+      setUser: (name, email) => {
+         const existingUser = get().registeredUsers.find(u => u.email === email);
+         if (existingUser) {
+            set({ user: existingUser });
+            return;
+         }
+        const newUser: StoredUser = {
           id: `user-${Date.now()}`,
           name,
+          email,
           avatar: `https://placehold.co/100x100.png`,
           points: 0,
           level: 1,
@@ -72,7 +85,39 @@ export const useDataStore = create<EcoVerseState>()(
           totalItems: 0,
           impactStats: { co2Saved: 0, waterSaved: 0, volumeSaved: 0, treesEquivalent: 0 },
         };
-        set({ user: newUser, leaderboard: [...generateFakeUsers(49), newUser] });
+        set(state => ({ 
+            user: newUser, 
+            leaderboard: [...generateFakeUsers(49), newUser],
+            registeredUsers: [...state.registeredUsers, newUser]
+        }));
+      },
+      loginUser: (email: string): boolean => {
+        const userToLogin = get().registeredUsers.find(u => u.email === email);
+        if (userToLogin) {
+            set({ user: userToLogin });
+            return true;
+        }
+        return false;
+      },
+      registerUser: (name, email) => {
+        const newUser: StoredUser = {
+          id: `user-${Date.now()}`,
+          name,
+          email,
+          avatar: `https://placehold.co/100x100.png`,
+          points: 0,
+          level: 1,
+          streak: 0,
+          lastRecycled: null,
+          badges: [],
+          totalItems: 0,
+          impactStats: { co2Saved: 0, waterSaved: 0, volumeSaved: 0, treesEquivalent: 0 },
+        };
+         set(state => ({ 
+            user: newUser, 
+            leaderboard: [...generateFakeUsers(49), newUser],
+            registeredUsers: [...state.registeredUsers, newUser]
+        }));
       },
       addSubmission: async (submissionData, location) => {
         const user = get().user;
@@ -133,7 +178,8 @@ export const useDataStore = create<EcoVerseState>()(
         set((state) => ({
           user: updatedUser,
           submissions: newSubmissions,
-          leaderboard: state.leaderboard.map(u => u.id === updatedUser.id ? updatedUser : u)
+          leaderboard: state.leaderboard.map(u => u.id === updatedUser.id ? updatedUser : u),
+          registeredUsers: state.registeredUsers.map(u => u.id === updatedUser.id ? { ...u, ...updatedUser } : u)
         }));
       },
       updateSubmissionStatus: (id, status) => {
@@ -149,12 +195,10 @@ export const useDataStore = create<EcoVerseState>()(
             const submissionToDelete = state.submissions.find(s => s.id === id);
             if (!submissionToDelete) return state;
 
-            // Subtract points and recalculate level
             const pointsToDeduct = submissionToDelete.points;
             const newPoints = user.points - pointsToDeduct;
             const newLevel = getLevel(newPoints).level;
             
-            // Subtract impact stats
             const newImpactStats: EnvironmentalImpact = {
                 co2Saved: user.impactStats.co2Saved - submissionToDelete.impact.co2Saved,
                 waterSaved: user.impactStats.waterSaved - submissionToDelete.impact.waterSaved,
@@ -178,6 +222,7 @@ export const useDataStore = create<EcoVerseState>()(
                 user: updatedUser,
                 submissions: newSubmissions,
                 leaderboard: newLeaderboard,
+                registeredUsers: state.registeredUsers.map(u => u.id === updatedUser.id ? { ...u, ...updatedUser } : u)
             };
         });
       },
@@ -189,7 +234,6 @@ export const useDataStore = create<EcoVerseState>()(
             const submissionToClaim = state.submissions.find(s => s.id === id);
             if (!submissionToClaim) return {};
             
-            // Award 10 points (Green Coins) to the user claiming the item
             const newPoints = user.points + 10;
             const newLevel = getLevel(newPoints).level;
             const updatedUser: User = {
@@ -198,13 +242,13 @@ export const useDataStore = create<EcoVerseState>()(
                 level: newLevel,
             };
             
-            // Remove the claimed item from the submissions list
             const newSubmissions = state.submissions.filter(s => s.id !== id);
             
             return {
                 user: updatedUser,
                 submissions: newSubmissions,
-                leaderboard: state.leaderboard.map(u => u.id === updatedUser.id ? updatedUser : u)
+                leaderboard: state.leaderboard.map(u => u.id === updatedUser.id ? updatedUser : u),
+                 registeredUsers: state.registeredUsers.map(u => u.id === updatedUser.id ? { ...u, ...updatedUser } : u)
             };
         });
       },
@@ -215,9 +259,8 @@ export const useDataStore = create<EcoVerseState>()(
           
           const newLeaderboard = leaderboard.map(u => {
             if (u.id === user.id) {
-              return u; // Don't change the real user's points
+              return u; 
             }
-            // Add a small random amount to each fake user's points
             const newPoints = u.points + Math.floor(Math.random() * 5);
             const newLevel = getLevel(newPoints).level;
             return { ...u, points: newPoints, level: newLevel };
@@ -228,7 +271,7 @@ export const useDataStore = create<EcoVerseState>()(
       },
       getBadges: () => BADGES,
       logout: () => {
-        set({ user: null, submissions: [], leaderboard: [] });
+        set({ user: null });
       },
     }),
     {

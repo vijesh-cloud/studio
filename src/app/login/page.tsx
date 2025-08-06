@@ -34,18 +34,20 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const router = useRouter();
-  const { setUser } = useDataStore();
+  const { loginUser, setUser } = useDataStore();
   const { toast } = useToast();
 
   const handleLogin = () => {
-    // In a real app, you would validate the credentials against a database.
-    // Here, we'll just simulate a login and set the user.
-    if (email && password) {
-      const username = email.split('@')[0];
-      setUser(username);
+    if (!email || !password) {
+        toast({ title: "Please enter email and password.", variant: "destructive" });
+        return;
+    }
+    
+    const success = loginUser(email);
+    if (success) {
       router.push('/');
     } else {
-        toast({ title: "Please enter email and password.", variant: "destructive" });
+      toast({ title: "Account not found.", description: "Please check your email or register for a new account.", variant: "destructive" });
     }
   };
   
@@ -54,8 +56,8 @@ export default function LoginPage() {
       const provider = new GoogleAuthProvider();
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
-      if (user.displayName) {
-        setUser(user.displayName);
+      if (user.displayName && user.email) {
+        setUser(user.displayName, user.email);
         router.push('/');
         toast({
           title: "Login Successful!",
