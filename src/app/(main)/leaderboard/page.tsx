@@ -36,14 +36,8 @@ export default function LeaderboardPage() {
     return <div className="p-4 text-center">Loading leaderboard...</div>;
   }
   
-  // Neighborhood: A smaller, more stable group including the current user
-  const currentUserIndex = leaderboard.findIndex(u => u.id === user.id);
-  const start = Math.max(0, currentUserIndex - 4);
-  const end = Math.min(leaderboard.length, start + 8);
-  const neighborhoodUsers = leaderboard.slice(start, end);
-  if (!neighborhoodUsers.some(u => u.id === user.id)) {
-      neighborhoodUsers.push(user);
-  }
+  // Neighborhood: Only the current user
+  const neighborhoodUsers = [user];
 
   // City & Global are the full list, which will be dynamic
   const cityUsers = leaderboard;
@@ -90,5 +84,3 @@ export default function LeaderboardPage() {
     </div>
   );
 }
-
-    
