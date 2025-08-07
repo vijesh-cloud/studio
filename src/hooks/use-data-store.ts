@@ -205,20 +205,17 @@ export const useDataStore = create<EcoVerseState>()(
             const submissionToDelete = state.submissions.find(s => s.id === id);
             if (!submissionToDelete) return state;
             
-            let newPoints = user.points;
-            // Only deduct points if the item has been sold.
-            // If it hasn't been sold, the user didn't get points for it yet.
-            if (submissionToDelete.status === 'Sold') {
-                newPoints -= submissionToDelete.points;
-            }
+            // Revert points only if the item had not been sold
+            const pointsToDeduct = submissionToDelete.status !== 'Sold' ? 0 : submissionToDelete.points;
             
+            let newPoints = user.points - pointsToDeduct;
             const newLevel = getLevel(newPoints).level;
             
             const newImpactStats: EnvironmentalImpact = {
-                co2Saved: user.impactStats.co2Saved - submissionToDelete.impact.co2Saved,
-                waterSaved: user.impactStats.waterSaved - submissionToDelete.impact.waterSaved,
-                volumeSaved: (user.impactStats.volumeSaved || 0) - (submissionToDelete.impact.volumeSaved || 0),
-                treesEquivalent: user.impactStats.treesEquivalent - submissionToDelete.impact.treesEquivalent,
+                co2Saved: user.impactStats.co2Saved - (submissionToDelete.impact?.co2Saved || 0),
+                waterSaved: user.impactStats.waterSaved - (submissionToDelete.impact?.waterSaved || 0),
+                volumeSaved: (user.impactStats.volumeSaved || 0) - (submissionToDelete.impact?.volumeSaved || 0),
+                treesEquivalent: user.impactStats.treesEquivalent - (submissionToDelete.impact?.treesEquivalent || 0),
             };
 
             const updatedUser: User = {
@@ -234,7 +231,6 @@ export const useDataStore = create<EcoVerseState>()(
             const newRegisteredUsers = state.registeredUsers.map(u => u.id === updatedUser.id ? { ...u, ...updatedUser } : u)
 
             return {
-                ...state,
                 user: updatedUser,
                 submissions: newSubmissions,
                 leaderboard: newLeaderboard,
@@ -357,3 +353,5 @@ export const useDataStore = create<EcoVerseState>()(
     }
   )
 );
+
+    
