@@ -26,6 +26,12 @@ export default function DeliveryPage() {
 
     const order = useMemo(() => submissions.find(s => s.orderId === orderId), [submissions, orderId]);
 
+    useEffect(() => {
+        if (!user) {
+            router.push('/login');
+        }
+    }, [user, router]);
+
     // Simulate status updates
     useEffect(() => {
         if (order?.deliveryStatus === 'Confirmed') {
@@ -39,8 +45,7 @@ export default function DeliveryPage() {
     }, [order, updateDeliveryStatus]);
 
     if (!user) {
-        router.push('/login');
-        return null;
+        return null; // or a loading spinner
     }
 
     if (!order) {
