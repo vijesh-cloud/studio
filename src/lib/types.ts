@@ -56,6 +56,7 @@ export interface Submission {
   orderId?: string;
   otp?: string;
   claimedByUserId?: string;
+  deliveryAddress?: string;
 }
 
 export interface Badge {

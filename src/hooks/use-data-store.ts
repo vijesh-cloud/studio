@@ -24,7 +24,7 @@ interface EcoVerseState {
   updateSubmissionStatus: (id: string, status: Submission['status']) => void;
   deleteSubmission: (id: string) => void;
   claimItem: (id: string) => void;
-  confirmOrder: (itemId: string) => string | null;
+  confirmOrder: (itemId: string, deliveryAddress: string) => string | null;
   updateDeliveryStatus: (orderId: string, status: 'Packed' | 'Out for Delivery' | 'Delivered' | 'Cancelled') => void;
   updateLeaderboardPoints: () => void;
   getBadges: () => typeof BADGES;
@@ -282,7 +282,7 @@ export const useDataStore = create<EcoVerseState>()(
             };
         });
       },
-      confirmOrder: (itemId) => {
+      confirmOrder: (itemId, deliveryAddress) => {
         let orderId: string | null = null;
         set(state => {
             const submission = state.submissions.find(s => s.id === itemId);
@@ -298,7 +298,8 @@ export const useDataStore = create<EcoVerseState>()(
                 orderId: newOrderId,
                 deliveryStatus: 'Confirmed' as const,
                 deliveryPartner: partner,
-                otp: newOtp
+                otp: newOtp,
+                deliveryAddress: deliveryAddress
             } : s);
 
             return { submissions: newSubmissions };

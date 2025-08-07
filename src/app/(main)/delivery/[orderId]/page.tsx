@@ -47,7 +47,7 @@ export default function DeliveryPage() {
         return <div className="p-4 text-center">Loading order details...</div>;
     }
     
-    const { deliveryPartner, deliveryStatus, itemType, photo, location, otp } = order;
+    const { deliveryPartner, deliveryStatus, itemType, photo, deliveryAddress, otp } = order;
     const currentStatusIndex = STATUS_STAGES.indexOf(deliveryStatus || 'Confirmed');
     const progress = ((currentStatusIndex + 1) / STATUS_STAGES.length) * 100;
 
@@ -135,7 +135,7 @@ export default function DeliveryPage() {
 
                     <div className="flex items-center text-sm">
                         <MapPin className="w-5 h-5 mr-3 text-primary"/>
-                        <span>Delivering to: {location.address}</span>
+                        <span>Delivering to: {deliveryAddress}</span>
                     </div>
 
                     {deliveryStatus === 'Out for Delivery' && (
