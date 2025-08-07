@@ -195,49 +195,44 @@ export const useDataStore = create<EcoVerseState>()(
             submissions: state.submissions.map(s => s.id === id ? {...s, status} : s)
         }));
       },
-      deleteSubmission: (id: string) => {
+       deleteSubmission: (id: string) => {
         set(state => {
-            const user = state.user;
-            if (!user) {
-                return state;
-            }
+          const user = state.user;
+          const submissionToDelete = state.submissions.find(s => s.id === id);
+          
+          if (!user || !submissionToDelete) {
+            return state;
+          }
 
-            const submissionToDelete = state.submissions.find(s => s.id === id);
-            if (!submissionToDelete) {
-                return state;
-            }
-            
-            // Revert points only if the item was not sold
-            const pointsToRevert = submissionToDelete.status !== 'Sold' ? submissionToDelete.points : 0;
-            const newPoints = Math.max(0, user.points - pointsToRevert);
-            const newLevelData = getLevel(newPoints);
-
-            // Revert environmental impact
+          let updatedUser = { ...user };
+          
+          // Only revert impact and points if the item wasn't sold
+          if (submissionToDelete.status !== 'Sold') {
             const impactToRevert = submissionToDelete.impact;
+            
             const newImpactStats: EnvironmentalImpact = {
-                co2Saved: Math.max(0, user.impactStats.co2Saved - (impactToRevert.co2Saved || 0)),
-                waterSaved: Math.max(0, user.impactStats.waterSaved - (impactToRevert.waterSaved || 0)),
-                treesEquivalent: Math.max(0, user.impactStats.treesEquivalent - (impactToRevert.treesEquivalent || 0)),
+              co2Saved: Math.max(0, user.impactStats.co2Saved - (impactToRevert.co2Saved || 0)),
+              waterSaved: Math.max(0, user.impactStats.waterSaved - (impactToRevert.waterSaved || 0)),
+              treesEquivalent: Math.max(0, user.impactStats.treesEquivalent - (impactToRevert.treesEquivalent || 0)),
             };
 
-            const updatedUser: User = {
-                ...user,
-                points: newPoints,
-                level: newLevelData.level,
-                totalItems: Math.max(0, user.totalItems - 1),
-                impactStats: newImpactStats,
+            updatedUser = {
+              ...updatedUser,
+              totalItems: Math.max(0, user.totalItems - 1),
+              impactStats: newImpactStats,
             };
+          }
 
-            const newSubmissions = state.submissions.filter(s => s.id !== id);
-            const newLeaderboard = state.leaderboard.map(u => u.id === updatedUser.id ? updatedUser : u);
-            const newRegisteredUsers = state.registeredUsers.map(u => u.id === updatedUser.id ? { ...u, ...updatedUser } : u);
+          const newSubmissions = state.submissions.filter(s => s.id !== id);
+          const newLeaderboard = state.leaderboard.map(u => u.id === updatedUser.id ? updatedUser : u);
+          const newRegisteredUsers = state.registeredUsers.map(u => u.id === updatedUser.id ? { ...u, ...updatedUser } : u);
 
-            return {
-                user: updatedUser,
-                submissions: newSubmissions,
-                leaderboard: newLeaderboard,
-                registeredUsers: newRegisteredUsers,
-            };
+          return {
+            user: updatedUser,
+            submissions: newSubmissions,
+            leaderboard: newLeaderboard,
+            registeredUsers: newRegisteredUsers,
+          };
         });
       },
       claimItem: (id: string) => {
@@ -274,7 +269,7 @@ export const useDataStore = create<EcoVerseState>()(
             
             const newSubmissions = state.submissions.map(s => {
                 if (s.id === id) {
-                    return { ...s, status: 'Sold' as const, points: pointsAward }; // Update points to awarded value
+                    return { ...s, status: 'Sold' as const, points: pointsAward, claimedByUserId: buyer.id };
                 }
                 return s;
             });
@@ -312,18 +307,20 @@ export const useDataStore = create<EcoVerseState>()(
       },
       updateDeliveryStatus: (orderId, status) => {
         set(state => {
+            let submissionToUpdate: Submission | undefined;
             const newSubmissions = state.submissions.map(s => {
                 if (s.orderId === orderId) {
-                    const newState = { ...s, deliveryStatus: status };
-                    // If delivered, mark as sold and award points
-                    if (status === 'Delivered' && s.status !== 'Sold') {
-                        get().claimItem(s.id);
-                        return { ...newState, status: 'Sold' as const };
-                    }
-                    return newState;
+                    submissionToUpdate = { ...s, deliveryStatus: status };
+                    return submissionToUpdate;
                 }
                 return s;
             });
+
+            if (status === 'Delivered' && submissionToUpdate && submissionToUpdate.status !== 'Sold') {
+                get().claimItem(submissionToUpdate.id);
+                 return { ...get() }; // re-get state after claimItem runs
+            }
+
             return { submissions: newSubmissions };
         });
       },
