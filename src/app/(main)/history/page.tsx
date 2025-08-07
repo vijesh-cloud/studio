@@ -5,7 +5,7 @@ import { useDataStore } from '@/hooks/use-data-store';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Package, Trash2, Inbox, Badge } from 'lucide-react';
+import { Package, Trash2, Inbox, CheckCircle } from 'lucide-react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
@@ -48,12 +48,12 @@ export default function HistoryPage() {
                     <p className="font-bold capitalize">{sub.itemType}</p>
                     <p className="text-xs text-muted-foreground">{new Date(sub.timestamp).toLocaleDateString()}</p>
                     {sub.status === 'Sold' ? (
-                        <div className="text-sm font-semibold text-green-600 flex items-center gap-1">
-                            <Badge className="h-4 w-4" />
-                            <span>Sold</span>
+                        <div className="text-sm font-semibold text-primary flex items-center gap-1">
+                            <CheckCircle className="h-4 w-4" />
+                            <span>Sold (+{sub.points} pts)</span>
                         </div>
                     ) : (
-                        <p className="text-sm font-semibold text-primary">+{sub.points} pts</p>
+                        <p className="text-sm font-semibold text-muted-foreground">+{sub.points} pts on sale</p>
                     )}
                 </div>
                 {sub.status !== 'Sold' && (
@@ -75,3 +75,5 @@ export default function HistoryPage() {
     </div>
   );
 }
+
+    

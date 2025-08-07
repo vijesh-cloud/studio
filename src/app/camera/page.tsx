@@ -12,7 +12,6 @@ import { classifyItemAction } from '@/app/actions';
 import { useToast } from '@/hooks/use-toast';
 import { useDataStore } from '@/hooks/use-data-store';
 import { useRouter } from 'next/navigation';
-import { POINTS_MAP } from '@/lib/constants';
 import Image from 'next/image';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 
@@ -190,9 +189,9 @@ export default function CameraPage() {
     addSubmission({
         photo: imageData,
         itemType: classification.itemType.toLowerCase(),
-        points: POINTS_MAP[classification.itemType.toLowerCase()] || 1, // This point value is now just for reference
         recyclingSuggestion: classification.recyclingSuggestion,
         funnyAIRoast: classification.funnyAIRoast,
+        points: 0, // Points are not awarded on submission anymore
     }, location);
 
     toast({
@@ -334,3 +333,5 @@ export default function CameraPage() {
     </div>
   );
 }
+
+    

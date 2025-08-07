@@ -146,6 +146,7 @@ export const useDataStore = create<EcoVerseState>()(
           status: 'Submitted',
           location,
           impact,
+          points: 10 // Potential points
         };
 
         const now = new Date();
@@ -202,8 +203,7 @@ export const useDataStore = create<EcoVerseState>()(
             const submissionToDelete = state.submissions.find(s => s.id === id);
             if (!submissionToDelete) return state;
 
-            // Only deduct points if the item wasn't sold
-            const pointsToDeduct = submissionToDelete.status !== 'Sold' ? submissionToDelete.points : 0;
+            const pointsToDeduct = submissionToDelete.status !== 'Sold' ? 0 : submissionToDelete.points;
             const newPoints = user.points - pointsToDeduct;
             const newLevel = getLevel(newPoints).level;
             
@@ -240,7 +240,7 @@ export const useDataStore = create<EcoVerseState>()(
             if (!buyer) return {};
 
             const submissionToClaim = state.submissions.find(s => s.id === id);
-            if (!submissionToClaim) return {};
+            if (!submissionToClaim || submissionToClaim.status === 'Sold') return {};
             
             const sellerId = submissionToClaim.userId;
             const pointsAward = 10;
@@ -309,3 +309,5 @@ export const useDataStore = create<EcoVerseState>()(
     }
   )
 );
+
+    
