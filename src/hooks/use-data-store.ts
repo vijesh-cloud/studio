@@ -19,6 +19,7 @@ interface EcoVerseState {
   setUser: (name: string, email: string) => void;
   loginUser: (email: string) => boolean;
   registerUser: (name: string, email: string) => void;
+  updateUser: (updatedData: Partial<User>) => void;
   addSubmission: (submissionData: Omit<Submission, 'id' | 'userId' | 'timestamp' | 'organizerId' | 'status' | 'impact'>, location: Location) => void;
   updateSubmissionStatus: (id: string, status: Submission['status']) => void;
   deleteSubmission: (id: string) => void;
@@ -118,6 +119,17 @@ export const useDataStore = create<EcoVerseState>()(
             leaderboard: [...generateFakeUsers(49), newUser],
             registeredUsers: [...state.registeredUsers, newUser]
         }));
+      },
+      updateUser: (updatedData) => {
+        set(state => {
+          if (!state.user) return state;
+          const updatedUser = { ...state.user, ...updatedData };
+          return {
+            user: updatedUser,
+            leaderboard: state.leaderboard.map(u => u.id === updatedUser.id ? updatedUser : u),
+            registeredUsers: state.registeredUsers.map(u => u.id === updatedUser.id ? { ...u, ...updatedUser } : u)
+          };
+        });
       },
       addSubmission: async (submissionData, location) => {
         const user = get().user;

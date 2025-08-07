@@ -1,16 +1,28 @@
 
 'use client';
 
+import { useState, useRef, ChangeEvent } from 'react';
 import { useDataStore } from '@/hooks/use-data-store';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
-import { LogOut, Settings, Share2, Award, Recycle, Flame, History, Coins } from 'lucide-react';
+import { LogOut, Settings, Share2, Award, Recycle, Flame, History, Coins, Edit } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { LEVELS } from '@/lib/constants';
 import { AchievementBadge } from '@/components/AchievementBadge';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogFooter,
+  DialogClose,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
   ChartContainer,
   ChartTooltip,
@@ -20,8 +32,14 @@ import {
 import { BarChart, CartesianGrid, XAxis, YAxis, Bar, Tooltip as RechartsTooltip, ResponsiveContainer } from 'recharts';
 
 export default function ProfilePage() {
-  const { user, getBadges, logout } = useDataStore();
+  const { user, getBadges, logout, updateUser } = useDataStore();
   const router = useRouter();
+
+  const [isEditing, setIsEditing] = useState(false);
+  const [name, setName] = useState(user?.name || '');
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(user?.avatar || null);
+  const [avatarFile, setAvatarFile] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   if (!user) {
     // router.push('/') would cause infinite loop if user not set up
@@ -31,6 +49,28 @@ export default function ProfilePage() {
   const handleLogout = () => {
     logout();
     router.push('/login');
+  };
+
+  const handleAvatarChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64String = reader.result as string;
+        setAvatarPreview(URL.createObjectURL(file));
+        setAvatarFile(base64String);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+  
+  const handleSave = () => {
+    if (!user) return;
+    updateUser({
+      name: name,
+      ...(avatarFile && { avatar: avatarFile }),
+    });
+    setIsEditing(false);
   };
 
   const allBadges = getBadges();
@@ -58,7 +98,47 @@ export default function ProfilePage() {
 
   return (
     <div className="p-4 space-y-6">
-      <Card className="text-center p-6 shadow-lg">
+      <Card className="text-center p-6 shadow-lg relative">
+        <Dialog open={isEditing} onOpenChange={setIsEditing}>
+          <DialogTrigger asChild>
+            <Button variant="ghost" size="icon" className="absolute top-2 right-2">
+              <Edit className="h-4 w-4" />
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Edit Profile</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+               <div className="flex flex-col items-center gap-4">
+                  <Avatar className="w-24 h-24 mx-auto border-4 border-primary">
+                    <AvatarImage src={avatarPreview || user.avatar} alt={name} data-ai-hint="person avatar" />
+                    <AvatarFallback>{name.charAt(0)}</AvatarFallback>
+                  </Avatar>
+                  <Button variant="outline" onClick={() => fileInputRef.current?.click()}>
+                    Change Photo
+                  </Button>
+                  <Input 
+                    type="file"
+                    ref={fileInputRef}
+                    className="hidden"
+                    accept="image/*"
+                    onChange={handleAvatarChange}
+                  />
+               </div>
+               <div className="space-y-2">
+                  <Label htmlFor="name">Name</Label>
+                  <Input id="name" value={name} onChange={(e) => setName(e.target.value)} />
+               </div>
+            </div>
+            <DialogFooter>
+                <DialogClose asChild>
+                    <Button variant="ghost">Cancel</Button>
+                </DialogClose>
+                <Button onClick={handleSave}>Save Changes</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
         <Avatar className="w-24 h-24 mx-auto border-4 border-primary">
           <AvatarImage src={user.avatar} alt={user.name} data-ai-hint="person avatar" />
           <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
@@ -69,7 +149,7 @@ export default function ProfilePage() {
         <div className="mt-4">
             <div className="flex justify-between items-center text-sm mb-1">
                 <span>Level {user.level}</span>
-                {nextLevel && <span>{user.points}/{nextLevel.minPoints} pts</span>}
+                {nextLevel && <span>{user.points}/{nextLevel.minPoints}</span>}
             </div>
             <Progress value={levelProgress} />
             {nextLevel && <p className="text-xs text-muted-foreground mt-1">{nextLevel.minPoints - user.points} points to Level {nextLevel.level}</p>}
