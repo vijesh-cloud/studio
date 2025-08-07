@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Separator } from '@/components/ui/separator';
 import { Input } from '@/components/ui/input';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { ArrowLeft, Star, Phone, MapPin, Package, Bike, KeyRound, MessageSquare } from 'lucide-react';
+import { ArrowLeft, Star, Phone, MapPin, Package, KeyRound, MessageSquare, Loader2 } from 'lucide-react';
 import Image from 'next/image';
 import { useEffect, useState, useMemo } from 'react';
 import { cn } from '@/lib/utils';
@@ -23,6 +23,8 @@ export default function DeliveryPage() {
     const { user, submissions, updateDeliveryStatus } = useDataStore();
     const { toast } = useToast();
     const [otpInput, setOtpInput] = useState('');
+    const [isVerifying, setIsVerifying] = useState(false);
+    const [rating, setRating] = useState(0);
 
     const order = useMemo(() => submissions.find(s => s.orderId === orderId), [submissions, orderId]);
 
@@ -57,16 +59,20 @@ export default function DeliveryPage() {
     const progress = ((currentStatusIndex + 1) / STATUS_STAGES.length) * 100;
 
     const handleVerifyOtp = () => {
-        if (otpInput === otp) {
-            updateDeliveryStatus(order.orderId!, 'Delivered');
-            toast({
-                title: "Delivery Complete!",
-                description: "You've earned 10 points for giving this item a new home!",
-                className: 'bg-primary text-primary-foreground'
-            });
-        } else {
-            toast({ title: "Invalid OTP", variant: "destructive" });
-        }
+        setIsVerifying(true);
+        setTimeout(() => {
+            if (otpInput === otp) {
+                updateDeliveryStatus(order.orderId!, 'Delivered');
+                toast({
+                    title: "Delivery Complete!",
+                    description: "You've earned 10 points for giving this item a new home!",
+                    className: 'bg-primary text-primary-foreground'
+                });
+            } else {
+                toast({ title: "Invalid OTP", variant: "destructive" });
+            }
+            setIsVerifying(false);
+        }, 1000);
     };
 
     const handleCancel = () => {
@@ -156,8 +162,12 @@ export default function DeliveryPage() {
                                         value={otpInput}
                                         onChange={(e) => setOtpInput(e.target.value)}
                                         maxLength={4}
+                                        disabled={isVerifying}
                                     />
-                                    <Button onClick={handleVerifyOtp}>Verify</Button>
+                                    <Button onClick={handleVerifyOtp} disabled={isVerifying || otpInput.length !== 4}>
+                                        {isVerifying && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                        Verify
+                                    </Button>
                                 </div>
                             </AlertDescription>
                         </Alert>
@@ -171,8 +181,8 @@ export default function DeliveryPage() {
                                 How was your experience?
                                 <div className="flex gap-1 mt-2">
                                     {[1, 2, 3, 4, 5].map(star => (
-                                        <Button key={star} variant="ghost" size="icon">
-                                            <Star className="w-6 h-6 text-yellow-400 hover:fill-yellow-400"/>
+                                        <Button key={star} variant="ghost" size="icon" onClick={() => setRating(star)}>
+                                            <Star className={cn("w-6 h-6 text-yellow-400", rating >= star ? 'fill-yellow-400' : 'fill-transparent')} />
                                         </Button>
                                     ))}
                                 </div>

@@ -30,6 +30,7 @@ import {
   ChartConfig,
 } from '@/components/ui/chart';
 import { BarChart, CartesianGrid, XAxis, YAxis, Bar, Tooltip as RechartsTooltip, ResponsiveContainer } from 'recharts';
+import { StatCard } from '@/components/StatCard';
 
 export default function ProfilePage() {
   const { user, getBadges, logout, updateUser } = useDataStore();
@@ -154,35 +155,11 @@ export default function ProfilePage() {
         </div>
       </Card>
 
-      <div className="grid grid-cols-4 gap-2 text-center">
-        <Card>
-            <CardContent className="p-3">
-                <Recycle className="mx-auto h-6 w-6 mb-1 text-primary"/>
-                <p className="font-bold text-lg">{user.totalItems}</p>
-                <p className="text-xs text-muted-foreground">Items Recycled</p>
-            </CardContent>
-        </Card>
-        <Card>
-            <CardContent className="p-3">
-                <Flame className="mx-auto h-6 w-6 mb-1 text-orange-500"/>
-                <p className="font-bold text-lg">{user.streak}</p>
-                <p className="text-xs text-muted-foreground">Day Streak</p>
-            </CardContent>
-        </Card>
-         <Card>
-            <CardContent className="p-3">
-                <Award className="mx-auto h-6 w-6 mb-1 text-yellow-500"/>
-                <p className="font-bold text-lg">{user.badges.length}</p>
-                <p className="text-xs text-muted-foreground">Badges</p>
-            </CardContent>
-        </Card>
-        <Card>
-            <CardContent className="p-3">
-                <Coins className="mx-auto h-6 w-6 mb-1 text-green-500"/>
-                <p className="font-bold text-lg">{user.points}</p>
-                <p className="text-xs text-muted-foreground">Green Coins</p>
-            </CardContent>
-        </Card>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+        <StatCard icon={Recycle} title="Items Recycled" value={user.totalItems} />
+        <StatCard icon={Flame} title="Day Streak" value={user.streak} />
+        <StatCard icon={Award} title="Badges" value={user.badges.length} />
+        <StatCard icon={Coins} title="Green Coins" value={user.points} />
       </div>
 
       <Card>

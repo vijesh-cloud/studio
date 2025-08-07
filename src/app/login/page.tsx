@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Recycle, UserCheck } from 'lucide-react';
+import { Recycle, UserCheck, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useDataStore } from '@/hooks/use-data-store';
@@ -36,6 +36,9 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [partnerUsername, setPartnerUsername] = useState('');
   const [partnerPassword, setPartnerPassword] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [isPartnerLoading, setIsPartnerLoading] = useState(false);
+
   const router = useRouter();
   const { loginUser, setUser, loginDeliveryPartner } = useDataStore();
   const { toast } = useToast();
@@ -45,12 +48,16 @@ export default function LoginPage() {
         toast({ title: "Please enter email and password.", variant: "destructive" });
         return;
     }
-    const success = loginUser(email);
-    if (success) {
-      router.push('/');
-    } else {
-      toast({ title: "Account not found.", description: "Please check your email or register for a new account.", variant: "destructive" });
-    }
+    setIsLoading(true);
+    setTimeout(() => {
+        const success = loginUser(email);
+        if (success) {
+            router.push('/');
+        } else {
+            toast({ title: "Account not found.", description: "Please check your email or register for a new account.", variant: "destructive" });
+        }
+        setIsLoading(false);
+    }, 1000);
   };
 
   const handlePartnerLogin = () => {
@@ -58,16 +65,21 @@ export default function LoginPage() {
         toast({ title: "Please enter username and password.", variant: "destructive" });
         return;
       }
-      const success = loginDeliveryPartner(partnerUsername, partnerPassword);
-      if (success) {
-          router.push('/delivery-partner-dashboard');
-          toast({ title: "Welcome back!", className: "bg-primary text-primary-foreground" });
-      } else {
-          toast({ title: "Invalid Credentials", variant: "destructive" });
-      }
+      setIsPartnerLoading(true);
+      setTimeout(() => {
+        const success = loginDeliveryPartner(partnerUsername, partnerPassword);
+        if (success) {
+            router.push('/delivery-partner-dashboard');
+            toast({ title: "Welcome back!", className: "bg-primary text-primary-foreground" });
+        } else {
+            toast({ title: "Invalid Credentials", variant: "destructive" });
+        }
+        setIsPartnerLoading(false);
+      }, 1000);
   };
   
   const handleGoogleLogin = async () => {
+    setIsLoading(true);
     try {
       const provider = new GoogleAuthProvider();
       const result = await signInWithPopup(auth, provider);
@@ -90,6 +102,8 @@ export default function LoginPage() {
           variant: "destructive",
         });
       }
+    } finally {
+        setIsLoading(false);
     }
   };
 
@@ -137,8 +151,8 @@ export default function LoginPage() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="grid gap-4">
-                <Button variant="outline" className="w-full" onClick={handleGoogleLogin}>
-                  <GoogleIcon className="mr-2 h-4 w-4" />
+                <Button variant="outline" className="w-full" onClick={handleGoogleLogin} disabled={isLoading}>
+                  {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <GoogleIcon className="mr-2 h-4 w-4" />}
                   Login with Google
                 </Button>
                 <div className="relative">
@@ -160,6 +174,7 @@ export default function LoginPage() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
+                    disabled={isLoading}
                   />
                 </div>
                 <div className="grid gap-2">
@@ -169,7 +184,8 @@ export default function LoginPage() {
                     type="password" 
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    required 
+                    required
+                    disabled={isLoading}
                   />
                 </div>
                 <div className="flex items-center">
@@ -179,7 +195,8 @@ export default function LoginPage() {
                 </div>
               </CardContent>
               <CardFooter className="flex flex-col gap-4">
-                <Button className="w-full" onClick={handleUserLogin}>
+                <Button className="w-full" onClick={handleUserLogin} disabled={isLoading}>
+                  {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                   Login
                 </Button>
                 <div className="text-center text-sm">
@@ -209,6 +226,7 @@ export default function LoginPage() {
                             value={partnerUsername}
                             onChange={(e) => setPartnerUsername(e.target.value)}
                             required
+                            disabled={isPartnerLoading}
                         />
                     </div>
                     <div className="grid gap-2">
@@ -218,12 +236,14 @@ export default function LoginPage() {
                             type="password" 
                             value={partnerPassword}
                             onChange={(e) => setPartnerPassword(e.target.value)}
-                            required 
+                            required
+                            disabled={isPartnerLoading}
                         />
                     </div>
                 </CardContent>
                 <CardFooter className="flex flex-col gap-4">
-                    <Button className="w-full" onClick={handlePartnerLogin}>
+                    <Button className="w-full" onClick={handlePartnerLogin} disabled={isPartnerLoading}>
+                        {isPartnerLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                         Partner Login
                     </Button>
                 </CardFooter>
