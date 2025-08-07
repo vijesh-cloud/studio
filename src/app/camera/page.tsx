@@ -17,6 +17,7 @@ import Image from 'next/image';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 
 type ClassificationResult = {
+  isValid: boolean;
   itemType: string;
   recyclingSuggestion: string;
   confidence: number;
@@ -166,6 +167,13 @@ export default function CameraPage() {
     try {
       const result = await classifyItemAction({ photoDataUri: imageData });
       setClassification(result);
+       if (!result.isValid) {
+        toast({
+          title: 'Invalid Item',
+          description: result.recyclingSuggestion || 'This item cannot be uploaded.',
+          variant: 'destructive',
+        });
+      }
     } catch (error) {
       toast({ title: 'Classification failed', description: 'Could not connect to the AI service.', variant: 'destructive' });
     } finally {
@@ -174,22 +182,22 @@ export default function CameraPage() {
   };
 
   const handleSubmit = () => {
-    if (!location || !imageData || !classification) {
-        toast({ title: 'Submission failed', description: 'Missing required information.', variant: 'destructive'});
+    if (!location || !imageData || !classification || !classification.isValid) {
+        toast({ title: 'Submission failed', description: 'Missing required information or item is invalid.', variant: 'destructive'});
         return;
     }
     setSubmitting(true);
     addSubmission({
         photo: imageData,
         itemType: classification.itemType.toLowerCase(),
-        points: POINTS_MAP[classification.itemType.toLowerCase()] || 1,
+        points: POINTS_MAP[classification.itemType.toLowerCase()] || 1, // This point value is now just for reference
         recyclingSuggestion: classification.recyclingSuggestion,
         funnyAIRoast: classification.funnyAIRoast,
     }, location);
 
     toast({
         title: 'Submission Successful!',
-        description: `You've earned ${POINTS_MAP[classification.itemType.toLowerCase()] || 1} points!`,
+        description: `Your item is now in the marketplace. You will receive points when it's claimed.`,
         className: 'bg-primary text-primary-foreground'
     });
     
@@ -287,7 +295,7 @@ export default function CameraPage() {
             />
           </div>
 
-          {classification && (
+          {classification && classification.isValid && (
             <Card className="bg-accent/20">
               <CardContent className="p-4 space-y-2">
                 <div className="flex justify-between items-center">
@@ -296,15 +304,24 @@ export default function CameraPage() {
                 </div>
                 <p className="text-sm"><Sparkles className="w-4 h-4 inline-block mr-1 text-yellow-400"/> {classification.recyclingSuggestion}</p>
                 {classification.funnyAIRoast && <p className="text-sm italic text-muted-foreground">"{classification.funnyAIRoast}"</p>}
-                <p className="text-right font-bold text-lg text-primary">+ {POINTS_MAP[classification.itemType.toLowerCase()] || 1} Points!</p>
               </CardContent>
             </Card>
           )}
+
+          {classification && !classification.isValid && (
+             <Alert variant="destructive">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertTitle>Invalid Item</AlertTitle>
+                <AlertDescription>
+                    {classification.recyclingSuggestion || 'This item cannot be uploaded. Please try another item.'}
+                </AlertDescription>
+             </Alert>
+          )}
           
-          {classification && (
+          {classification && classification.isValid && (
             <Button className="w-full" onClick={handleSubmit} disabled={submitting || locationError}>
               {submitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CheckCircle className="mr-2 h-4 w-4" />}
-              Confirm & Submit
+              Submit to Marketplace
             </Button>
           )}
           

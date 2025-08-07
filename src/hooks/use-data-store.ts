@@ -163,9 +163,6 @@ export const useDataStore = create<EcoVerseState>()(
         } else {
           newStreak = 1;
         }
-
-        const newPoints = user.points + (POINTS_MAP[submissionData.itemType] || 1);
-        const newLevel = getLevel(newPoints).level;
         
         const newSubmissions = [newSubmission, ...get().submissions];
 
@@ -173,8 +170,6 @@ export const useDataStore = create<EcoVerseState>()(
         
         const updatedUser: User = {
           ...user,
-          points: newPoints,
-          level: newLevel,
           streak: newStreak,
           lastRecycled: now.toISOString(),
           totalItems: user.totalItems + 1,
@@ -207,7 +202,8 @@ export const useDataStore = create<EcoVerseState>()(
             const submissionToDelete = state.submissions.find(s => s.id === id);
             if (!submissionToDelete) return state;
 
-            const pointsToDeduct = submissionToDelete.points;
+            // Only deduct points if the item wasn't sold
+            const pointsToDeduct = submissionToDelete.status !== 'Sold' ? submissionToDelete.points : 0;
             const newPoints = user.points - pointsToDeduct;
             const newLevel = getLevel(newPoints).level;
             
@@ -240,32 +236,48 @@ export const useDataStore = create<EcoVerseState>()(
       },
       claimItem: (id: string) => {
         set(state => {
-            const user = state.user;
-            if (!user) return {};
+            const buyer = state.user; // The user who is claiming the item
+            if (!buyer) return {};
 
             const submissionToClaim = state.submissions.find(s => s.id === id);
             if (!submissionToClaim) return {};
             
-            const newPoints = user.points + 10;
-            const newLevel = getLevel(newPoints).level;
-            const updatedUser: User = {
-                ...user,
-                points: newPoints,
-                level: newLevel,
-            };
+            const sellerId = submissionToClaim.userId;
+            const pointsAward = 10;
+            let allUsers = [...state.leaderboard];
+            let allRegisteredUsers = [...state.registeredUsers];
+
+            // Update buyer
+            const updatedBuyerPoints = buyer.points + pointsAward;
+            const updatedBuyerLevel = getLevel(updatedBuyerPoints).level;
+            const updatedBuyer = { ...buyer, points: updatedBuyerPoints, level: updatedBuyerLevel };
+            
+            allUsers = allUsers.map(u => u.id === updatedBuyer.id ? updatedBuyer : u);
+            allRegisteredUsers = allRegisteredUsers.map(u => u.id === updatedBuyer.id ? { ...u, ...updatedBuyer } : u);
+
+            // Update seller
+            const seller = allUsers.find(u => u.id === sellerId);
+            if (seller) {
+                const updatedSellerPoints = seller.points + pointsAward;
+                const updatedSellerLevel = getLevel(updatedSellerPoints).level;
+                const updatedSeller = { ...seller, points: updatedSellerPoints, level: updatedSellerLevel };
+                
+                allUsers = allUsers.map(u => u.id === sellerId ? updatedSeller : u);
+                allRegisteredUsers = allRegisteredUsers.map(u => u.id === sellerId ? { ...u, ...updatedSeller } : u);
+            }
             
             const newSubmissions = state.submissions.map(s => {
                 if (s.id === id) {
-                    return { ...s, status: 'Sold' as const };
+                    return { ...s, status: 'Sold' as const, points: pointsAward }; // Update points to awarded value
                 }
                 return s;
             });
             
             return {
-                user: updatedUser,
+                user: updatedBuyer,
                 submissions: newSubmissions,
-                leaderboard: state.leaderboard.map(u => u.id === updatedUser.id ? updatedUser : u),
-                 registeredUsers: state.registeredUsers.map(u => u.id === updatedUser.id ? { ...u, ...updatedUser } : u)
+                leaderboard: allUsers,
+                registeredUsers: allRegisteredUsers
             };
         });
       },
