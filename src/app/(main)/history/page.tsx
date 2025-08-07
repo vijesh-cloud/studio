@@ -5,7 +5,7 @@ import { useDataStore } from '@/hooks/use-data-store';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Package, Trash2, Inbox, CheckCircle, ShoppingCart } from 'lucide-react';
+import { Package, Trash2, Inbox, CheckCircle, ShoppingCart, Upload } from 'lucide-react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
