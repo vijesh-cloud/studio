@@ -28,7 +28,17 @@ export interface Location {
   mapsURL: string;
 }
 
+export type DeliveryStatus = 'Confirmed' | 'Packed' | 'Out for Delivery' | 'Delivered' | 'Cancelled';
 export type SubmissionStatus = 'Submitted' | 'Picked Up' | 'Recycled' | 'Failed' | 'Sold';
+
+export interface DeliveryPartner {
+    id: string;
+    name: string;
+    photo: string;
+    contact: string;
+    vehicle: string;
+    rating: number;
+}
 
 export interface Submission {
   id: string;
@@ -43,6 +53,10 @@ export interface Submission {
   funnyAIRoast?: string;
   recyclingSuggestion?: string;
   impact: EnvironmentalImpact;
+  deliveryStatus?: DeliveryStatus;
+  deliveryPartner?: DeliveryPartner;
+  orderId?: string;
+  otp?: string;
 }
 
 export interface Badge {

@@ -3,8 +3,8 @@
 
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import type { User, Submission, Location, EnvironmentalImpact } from '@/lib/types';
-import { LEVELS, BADGES, POINTS_MAP } from '@/lib/constants';
+import type { User, Submission, Location, EnvironmentalImpact, DeliveryPartner } from '@/lib/types';
+import { LEVELS, BADGES, DELIVERY_PARTNERS } from '@/lib/constants';
 import { differenceInCalendarDays, isToday } from 'date-fns';
 import { getImpactAction } from '@/app/actions';
 
@@ -24,6 +24,8 @@ interface EcoVerseState {
   updateSubmissionStatus: (id: string, status: Submission['status']) => void;
   deleteSubmission: (id: string) => void;
   claimItem: (id: string) => void;
+  confirmOrder: (itemId: string) => string | null;
+  updateDeliveryStatus: (orderId: string, status: 'Packed' | 'Out for Delivery' | 'Delivered' | 'Cancelled') => void;
   updateLeaderboardPoints: () => void;
   getBadges: () => typeof BADGES;
   logout: () => void;
@@ -202,8 +204,9 @@ export const useDataStore = create<EcoVerseState>()(
 
             const submissionToDelete = state.submissions.find(s => s.id === id);
             if (!submissionToDelete) return state;
-
-            const pointsToDeduct = submissionToDelete.status !== 'Sold' ? 0 : submissionToDelete.points;
+            
+            // Only deduct points if the item hasn't been sold
+            const pointsToDeduct = submissionToDelete.status !== 'Sold' ? submissionToDelete.points : 0;
             const newPoints = user.points - pointsToDeduct;
             const newLevel = getLevel(newPoints).level;
             
@@ -224,13 +227,14 @@ export const useDataStore = create<EcoVerseState>()(
             
             const newSubmissions = state.submissions.filter(s => s.id !== id);
             const newLeaderboard = state.leaderboard.map(u => u.id === updatedUser.id ? updatedUser : u);
+            const newRegisteredUsers = state.registeredUsers.map(u => u.id === updatedUser.id ? { ...u, ...updatedUser } : u)
 
             return {
                 ...state,
                 user: updatedUser,
                 submissions: newSubmissions,
                 leaderboard: newLeaderboard,
-                registeredUsers: state.registeredUsers.map(u => u.id === updatedUser.id ? { ...u, ...updatedUser } : u)
+                registeredUsers: newRegisteredUsers,
             };
         });
       },
@@ -281,6 +285,46 @@ export const useDataStore = create<EcoVerseState>()(
             };
         });
       },
+      confirmOrder: (itemId) => {
+        let orderId: string | null = null;
+        set(state => {
+            const submission = state.submissions.find(s => s.id === itemId);
+            if (!submission) return state;
+
+            const partner = DELIVERY_PARTNERS[Math.floor(Math.random() * DELIVERY_PARTNERS.length)];
+            const newOrderId = `ORD-${Date.now()}`;
+            const newOtp = Math.floor(1000 + Math.random() * 9000).toString();
+            orderId = newOrderId;
+
+            const newSubmissions = state.submissions.map(s => s.id === itemId ? {
+                ...s,
+                orderId: newOrderId,
+                deliveryStatus: 'Confirmed' as const,
+                deliveryPartner: partner,
+                otp: newOtp
+            } : s);
+
+            return { submissions: newSubmissions };
+        });
+        return orderId;
+      },
+      updateDeliveryStatus: (orderId, status) => {
+        set(state => {
+            const newSubmissions = state.submissions.map(s => {
+                if (s.orderId === orderId) {
+                    const newState = { ...s, deliveryStatus: status };
+                    // If delivered, mark as sold and award points
+                    if (status === 'Delivered' && s.status !== 'Sold') {
+                        get().claimItem(s.id);
+                        return { ...newState, status: 'Sold' as const };
+                    }
+                    return newState;
+                }
+                return s;
+            });
+            return { submissions: newSubmissions };
+        });
+      },
       updateLeaderboardPoints: () => {
         set(state => {
           const { user, leaderboard } = state;
@@ -309,5 +353,3 @@ export const useDataStore = create<EcoVerseState>()(
     }
   )
 );
-
-    

@@ -6,7 +6,7 @@ import {
   SocialSharerBadge,
   CommunityLeaderBadge,
 } from '@/components/icons';
-import type { Level, Badge } from '@/lib/types';
+import type { Level, Badge, DeliveryPartner } from '@/lib/types';
 
 export const POINTS_MAP: { [key: string]: number } = {
   'plastic bottle': 10,
@@ -68,4 +68,10 @@ export const BADGES: Badge[] = [
     icon: CommunityLeaderBadge,
     condition: () => false, // This would require a real backend
   },
+];
+
+export const DELIVERY_PARTNERS: DeliveryPartner[] = [
+    { id: 'dp-1', name: 'Ravi Kumar', photo: 'https://placehold.co/100x100.png', contact: '****-**-1234', vehicle: 'Bike - DL01 ABC', rating: 4.8 },
+    { id: 'dp-2', name: 'Sunita Sharma', photo: 'https://placehold.co/100x100.png', contact: '****-**-5678', vehicle: 'Scooter - MH02 XYZ', rating: 4.9 },
+    { id: 'dp-3', name: 'Amit Patel', photo: 'https://placehold.co/100x100.png', contact: '****-**-9012', vehicle: 'E-Rickshaw - KA03 LMN', rating: 4.7 },
 ];
