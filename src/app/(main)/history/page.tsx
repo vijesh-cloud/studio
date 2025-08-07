@@ -5,10 +5,11 @@ import { useDataStore } from '@/hooks/use-data-store';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Package, Trash2, Inbox } from 'lucide-react';
+import { Package, Trash2, Inbox, Badge } from 'lucide-react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
+import { cn } from '@/lib/utils';
 
 export default function HistoryPage() {
   const { user, submissions, deleteSubmission } = useDataStore();
@@ -41,16 +42,25 @@ export default function HistoryPage() {
         <ScrollArea className="h-[calc(100vh-12rem)]">
           <div className="space-y-4 pr-4">
             {userSubmissions.map(sub => (
-              <Card key={sub.id} className="flex items-center p-3 gap-4">
+              <Card key={sub.id} className={cn("flex items-center p-3 gap-4", sub.status === 'Sold' && 'bg-accent/50')}>
                 <Image src={sub.photo} alt={sub.itemType} width={64} height={64} className="rounded-md object-cover w-16 h-16" />
                 <div className="flex-grow">
                     <p className="font-bold capitalize">{sub.itemType}</p>
                     <p className="text-xs text-muted-foreground">{new Date(sub.timestamp).toLocaleDateString()}</p>
-                    <p className="text-sm font-semibold text-primary">+{sub.points} pts</p>
+                    {sub.status === 'Sold' ? (
+                        <div className="text-sm font-semibold text-green-600 flex items-center gap-1">
+                            <Badge className="h-4 w-4" />
+                            <span>Sold</span>
+                        </div>
+                    ) : (
+                        <p className="text-sm font-semibold text-primary">+{sub.points} pts</p>
+                    )}
                 </div>
-                <Button variant="destructive" size="icon" onClick={() => deleteSubmission(sub.id)}>
-                    <Trash2 className="w-4 h-4"/>
-                </Button>
+                {sub.status !== 'Sold' && (
+                    <Button variant="destructive" size="icon" onClick={() => deleteSubmission(sub.id)}>
+                        <Trash2 className="w-4 h-4"/>
+                    </Button>
+                )}
               </Card>
             ))}
           </div>

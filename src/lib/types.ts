@@ -28,7 +28,7 @@ export interface Location {
   mapsURL: string;
 }
 
-export type SubmissionStatus = 'Submitted' | 'Picked Up' | 'Recycled' | 'Failed';
+export type SubmissionStatus = 'Submitted' | 'Picked Up' | 'Recycled' | 'Failed' | 'Sold';
 
 export interface Submission {
   id: string;

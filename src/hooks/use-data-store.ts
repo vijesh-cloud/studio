@@ -254,7 +254,12 @@ export const useDataStore = create<EcoVerseState>()(
                 level: newLevel,
             };
             
-            const newSubmissions = state.submissions.filter(s => s.id !== id);
+            const newSubmissions = state.submissions.map(s => {
+                if (s.id === id) {
+                    return { ...s, status: 'Sold' as const };
+                }
+                return s;
+            });
             
             return {
                 user: updatedUser,

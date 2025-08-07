@@ -31,7 +31,7 @@ export default function MarketPage() {
     });
   }
   
-  const communitySubmissions = submissions.filter(s => s.userId !== user?.id);
+  const communitySubmissions = submissions.filter(s => s.userId !== user?.id && s.status !== 'Sold');
 
   return (
     <div className="p-4 space-y-6">
