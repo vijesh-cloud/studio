@@ -13,11 +13,13 @@ interface StoredUser extends User {
 }
 interface EcoVerseState {
   user: User | null;
+  deliveryPartner: DeliveryPartner | null;
   registeredUsers: StoredUser[];
   submissions: Submission[];
   leaderboard: User[];
   setUser: (name: string, email: string) => void;
   loginUser: (email: string) => boolean;
+  loginDeliveryPartner: (username: string, password: string) => boolean;
   registerUser: (name: string, email: string) => void;
   updateUser: (updatedData: Partial<User>) => void;
   addSubmission: (submissionData: Omit<Submission, 'id' | 'userId' | 'timestamp' | 'organizerId' | 'status' | 'impact'>, location: Location) => void;
@@ -65,6 +67,7 @@ export const useDataStore = create<EcoVerseState>()(
   persist(
     (set, get) => ({
       user: null,
+      deliveryPartner: null,
       submissions: [],
       leaderboard: [],
       registeredUsers: [],
@@ -96,7 +99,15 @@ export const useDataStore = create<EcoVerseState>()(
       loginUser: (email: string): boolean => {
         const userToLogin = get().registeredUsers.find(u => u.email === email);
         if (userToLogin) {
-            set({ user: userToLogin });
+            set({ user: userToLogin, deliveryPartner: null });
+            return true;
+        }
+        return false;
+      },
+      loginDeliveryPartner: (username, password) => {
+        const partner = DELIVERY_PARTNERS.find(p => p.username === username && p.password === password);
+        if (partner) {
+            set({ deliveryPartner: partner, user: null });
             return true;
         }
         return false;
@@ -211,9 +222,9 @@ export const useDataStore = create<EcoVerseState>()(
             const impactToRevert = submissionToDelete.impact;
             
             const newImpactStats: EnvironmentalImpact = {
-              co2Saved: Math.max(0, user.impactStats.co2Saved - (impactToRevert.co2Saved || 0)),
-              waterSaved: Math.max(0, user.impactStats.waterSaved - (impactToRevert.waterSaved || 0)),
-              treesEquivalent: Math.max(0, user.impactStats.treesEquivalent - (impactToRevert.treesEquivalent || 0)),
+              co2Saved: Math.max(0, user.impactStats.co2Saved - (impactToRevert?.co2Saved || 0)),
+              waterSaved: Math.max(0, user.impactStats.waterSaved - (impactToRevert?.waterSaved || 0)),
+              treesEquivalent: Math.max(0, user.impactStats.treesEquivalent - (impactToRevert?.treesEquivalent || 0)),
             };
 
             updatedUser = {
@@ -344,7 +355,7 @@ export const useDataStore = create<EcoVerseState>()(
       },
       getBadges: () => BADGES,
       logout: () => {
-        set({ user: null });
+        set({ user: null, deliveryPartner: null });
       },
     }),
     {

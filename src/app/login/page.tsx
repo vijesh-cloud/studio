@@ -13,13 +13,14 @@ import {
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Recycle } from 'lucide-react';
+import { Recycle, UserCheck } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useDataStore } from '@/hooks/use-data-store';
 import { auth } from '@/lib/firebase';
 import { GoogleAuthProvider, signInWithPopup, sendPasswordResetEmail } from 'firebase/auth';
 import { useToast } from '@/hooks/use-toast';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const GoogleIcon = (props: React.SVGProps<SVGSVGElement>) => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="24px" height="24px" {...props}>
@@ -33,22 +34,37 @@ const GoogleIcon = (props: React.SVGProps<SVGSVGElement>) => (
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [partnerUsername, setPartnerUsername] = useState('');
+  const [partnerPassword, setPartnerPassword] = useState('');
   const router = useRouter();
-  const { loginUser, setUser } = useDataStore();
+  const { loginUser, setUser, loginDeliveryPartner } = useDataStore();
   const { toast } = useToast();
 
-  const handleLogin = () => {
+  const handleUserLogin = () => {
     if (!email || !password) {
         toast({ title: "Please enter email and password.", variant: "destructive" });
         return;
     }
-    
     const success = loginUser(email);
     if (success) {
       router.push('/');
     } else {
       toast({ title: "Account not found.", description: "Please check your email or register for a new account.", variant: "destructive" });
     }
+  };
+
+  const handlePartnerLogin = () => {
+      if (!partnerUsername || !partnerPassword) {
+        toast({ title: "Please enter username and password.", variant: "destructive" });
+        return;
+      }
+      const success = loginDeliveryPartner(partnerUsername, partnerPassword);
+      if (success) {
+          router.push('/delivery-partner-dashboard');
+          toast({ title: "Welcome back!", className: "bg-primary text-primary-foreground" });
+      } else {
+          toast({ title: "Invalid Credentials", variant: "destructive" });
+      }
   };
   
   const handleGoogleLogin = async () => {
@@ -79,7 +95,7 @@ export default function LoginPage() {
 
   const handleForgotPassword = async () => {
     if (!email) {
-      toast({ title: "Please enter your email address.", variant: "destructive" });
+      toast({ title: "Please enter your email address to reset password.", variant: "destructive" });
       return;
     }
     try {
@@ -106,65 +122,113 @@ export default function LoginPage() {
           <Recycle className="h-12 w-12 text-primary" />
         </div>
         <Card>
-          <CardHeader className="space-y-1 text-center">
-            <CardTitle className="text-2xl">Welcome Back!</CardTitle>
-            <CardDescription>
-              Sign in to continue your recycling journey!
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="grid gap-4">
-            <Button variant="outline" className="w-full" onClick={handleGoogleLogin}>
-              <GoogleIcon className="mr-2 h-4 w-4" />
-              Login with Google
-            </Button>
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t" />
-              </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-card px-2 text-muted-foreground">
-                  Or continue with
-                </span>
-              </div>
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="m@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="password">Password</Label>
-              <Input 
-                id="password" 
-                type="password" 
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required 
-              />
-            </div>
-            <div className="flex items-center">
-                <Button variant="link" className="px-0" onClick={handleForgotPassword}>
-                    Forgot password?
+          <Tabs defaultValue="user" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="user">User Login</TabsTrigger>
+                <TabsTrigger value="partner">Partner Login</TabsTrigger>
+            </TabsList>
+
+            {/* USER LOGIN TAB */}
+            <TabsContent value="user">
+              <CardHeader className="space-y-1 text-center">
+                <CardTitle className="text-2xl">Welcome Back!</CardTitle>
+                <CardDescription>
+                  Sign in to continue your recycling journey!
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="grid gap-4">
+                <Button variant="outline" className="w-full" onClick={handleGoogleLogin}>
+                  <GoogleIcon className="mr-2 h-4 w-4" />
+                  Login with Google
                 </Button>
-            </div>
-          </CardContent>
-          <CardFooter className="flex flex-col gap-4">
-            <Button className="w-full" onClick={handleLogin}>
-              Login
-            </Button>
-            <div className="text-center text-sm">
-              Don&apos;t have an account?{' '}
-              <Link href="/register" className="underline">
-                Register
-              </Link>
-            </div>
-          </CardFooter>
+                <div className="relative">
+                  <div className="absolute inset-0 flex items-center">
+                    <span className="w-full border-t" />
+                  </div>
+                  <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-card px-2 text-muted-foreground">
+                      Or continue with
+                    </span>
+                  </div>
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="m@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="password">Password</Label>
+                  <Input 
+                    id="password" 
+                    type="password" 
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required 
+                  />
+                </div>
+                <div className="flex items-center">
+                    <Button variant="link" className="px-0" onClick={handleForgotPassword}>
+                        Forgot password?
+                    </Button>
+                </div>
+              </CardContent>
+              <CardFooter className="flex flex-col gap-4">
+                <Button className="w-full" onClick={handleUserLogin}>
+                  Login
+                </Button>
+                <div className="text-center text-sm">
+                  Don&apos;t have an account?{' '}
+                  <Link href="/register" className="underline">
+                    Register
+                  </Link>
+                </div>
+              </CardFooter>
+            </TabsContent>
+
+            {/* PARTNER LOGIN TAB */}
+            <TabsContent value="partner">
+                <CardHeader className="space-y-1 text-center">
+                    <CardTitle className="text-2xl">Partner Portal</CardTitle>
+                    <CardDescription>
+                    Sign in to manage your deliveries.
+                    </CardDescription>
+                </CardHeader>
+                <CardContent className="grid gap-4">
+                    <div className="grid gap-2">
+                        <Label htmlFor="partner-username">Username</Label>
+                        <Input
+                            id="partner-username"
+                            type="text"
+                            placeholder="e.g. rahul"
+                            value={partnerUsername}
+                            onChange={(e) => setPartnerUsername(e.target.value)}
+                            required
+                        />
+                    </div>
+                    <div className="grid gap-2">
+                        <Label htmlFor="partner-password">Password</Label>
+                        <Input 
+                            id="partner-password" 
+                            type="password" 
+                            value={partnerPassword}
+                            onChange={(e) => setPartnerPassword(e.target.value)}
+                            required 
+                        />
+                    </div>
+                </CardContent>
+                <CardFooter className="flex flex-col gap-4">
+                    <Button className="w-full" onClick={handlePartnerLogin}>
+                        Partner Login
+                    </Button>
+                </CardFooter>
+            </TabsContent>
+          </Tabs>
         </Card>
       </div>
     </div>

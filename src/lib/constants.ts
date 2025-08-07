@@ -71,7 +71,14 @@ export const BADGES: Badge[] = [
 ];
 
 export const DELIVERY_PARTNERS: DeliveryPartner[] = [
-    { id: 'dp-1', name: 'Ravi Kumar', photo: 'https://placehold.co/100x100.png', contact: '****-**-1234', vehicle: 'Bike - DL01 ABC', rating: 4.8 },
-    { id: 'dp-2', name: 'Sunita Sharma', photo: 'https://placehold.co/100x100.png', contact: '****-**-5678', vehicle: 'Scooter - MH02 XYZ', rating: 4.9 },
-    { id: 'dp-3', name: 'Amit Patel', photo: 'https://placehold.co/100x100.png', contact: '****-**-9012', vehicle: 'E-Rickshaw - KA03 LMN', rating: 4.7 },
+    { id: 'dp-1', name: 'Rahul Sharma', username: 'rahul', password: 'rahul1995', photo: 'https://placehold.co/100x100.png', contact: '****-**-1234', vehicle: 'Bike - DL01 ABC', rating: 4.8 },
+    { id: 'dp-2', name: 'Priya Singh', username: 'priya', password: 'priya1997', photo: 'https://placehold.co/100x100.png', contact: '****-**-5678', vehicle: 'Scooter - MH02 XYZ', rating: 4.9 },
+    { id: 'dp-3', name: 'Amit Verma', username: 'amit', password: 'amit1990', photo: 'https://placehold.co/100x100.png', contact: '****-**-9012', vehicle: 'E-Rickshaw - KA03 LMN', rating: 4.7 },
+    { id: 'dp-4', name: 'Sneha Kapoor', username: 'sneha', password: 'sneha1998', photo: 'https://placehold.co/100x100.png', contact: '****-**-1111', vehicle: 'Bike - TN04 PQR', rating: 4.8 },
+    { id: 'dp-5', name: 'Karan Mehta', username: 'karan', password: 'karan1992', photo: 'https://placehold.co/100x100.png', contact: '****-**-2222', vehicle: 'Scooter - DL05 STU', rating: 4.6 },
+    { id: 'dp-6', name: 'Neha Reddy', username: 'neha', password: 'neha1996', photo: 'https://placehold.co/100x100.png', contact: '****-**-3333', vehicle: 'Bike - MH06 VWX', rating: 4.9 },
+    { id: 'dp-7', name: 'Arjun Nair', username: 'arjun', password: 'arjun1994', photo: 'https://placehold.co/100x100.png', contact: '****-**-4444', vehicle: 'E-Rickshaw - KA07 YZ', rating: 4.7 },
+    { id: 'dp-8', name: 'Anjali Das', username: 'anjali', password: 'anjali1993', photo: 'https://placehold.co/100x100.png', contact: '****-**-5555', vehicle: 'Bike - TN08 BCD', rating: 4.8 },
+    { id: 'dp-9', name: 'Rohan Iyer', username: 'rohan', password: 'rohan1991', photo: 'https://placehold.co/100x100.png', contact: '****-**-6666', vehicle: 'Scooter - DL09 EFG', rating: 4.5 },
+    { id: 'dp-10', name: 'Divya Joshi', username: 'divya', password: 'divya1999', photo: 'https://placehold.co/100x100.png', contact: '****-**-7777', vehicle: 'Bike - MH10 HIJ', rating: 4.9 },
 ];

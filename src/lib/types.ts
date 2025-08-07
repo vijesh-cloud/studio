@@ -1,4 +1,5 @@
 
+
 export interface EnvironmentalImpact {
   co2Saved: number; // in kg
   waterSaved: number; // in liters
@@ -36,6 +37,8 @@ export interface DeliveryPartner {
     contact: string;
     vehicle: string;
     rating: number;
+    username?: string;
+    password?: string;
 }
 
 export interface Submission {
