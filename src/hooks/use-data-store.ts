@@ -205,9 +205,13 @@ export const useDataStore = create<EcoVerseState>()(
             const submissionToDelete = state.submissions.find(s => s.id === id);
             if (!submissionToDelete) return state;
             
-            // Only deduct points if the item hasn't been sold
-            const pointsToDeduct = submissionToDelete.status !== 'Sold' ? submissionToDelete.points : 0;
-            const newPoints = user.points - pointsToDeduct;
+            let newPoints = user.points;
+            // Only deduct points if the item has been sold.
+            // If it hasn't been sold, the user didn't get points for it yet.
+            if (submissionToDelete.status === 'Sold') {
+                newPoints -= submissionToDelete.points;
+            }
+            
             const newLevel = getLevel(newPoints).level;
             
             const newImpactStats: EnvironmentalImpact = {
