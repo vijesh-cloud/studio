@@ -36,13 +36,13 @@ export default function HistoryPage() {
     const submission = submissions.find(s => s.id === subId);
     if (!submission) return;
 
-    deleteSubmission(subId);
+    const undo = deleteSubmission(subId);
 
     toast({
       title: "Item Deleted",
       description: `"${submission.itemType}" has been removed.`,
       action: (
-        <Button variant="secondary" onClick={() => console.log('Undo not implemented yet')}>
+        <Button variant="secondary" onClick={() => undo()}>
           Undo
         </Button>
       ),

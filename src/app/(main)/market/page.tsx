@@ -47,8 +47,8 @@ export default function MarketPage() {
                 <CardContent className="p-3">
                     <h3 className="font-semibold capitalize truncate">{item.itemType}</h3>
                     <p className="text-xs text-muted-foreground">{item.location.city}</p>
-                    <Link href={`/order-confirmation/${item.id}`}>
-                      <Button className="w-full mt-2" size="sm">Buy</Button>
+                    <Link href={`/order-confirmation/${item.id}`} passHref>
+                      <Button asChild className="w-full mt-2" size="sm"><a>Buy</a></Button>
                     </Link>
                 </CardContent>
             </Card>

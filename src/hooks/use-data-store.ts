@@ -24,7 +24,7 @@ interface EcoVerseState {
   updateUser: (updatedData: Partial<User>) => void;
   addSubmission: (submissionData: Omit<Submission, 'id' | 'userId' | 'timestamp' | 'organizerId' | 'status' | 'impact'>, location: Location) => void;
   updateSubmissionStatus: (id: string, status: Submission['status']) => void;
-  deleteSubmission: (id: string) => void;
+  deleteSubmission: (id: string) => () => void; // Returns an undo function
   claimItem: (id: string) => void;
   confirmOrder: (itemId: string, deliveryAddress: string) => string | null;
   updateDeliveryStatus: (orderId: string, status: 'Packed' | 'Out for Delivery' | 'Delivered' | 'Cancelled') => void;
@@ -206,45 +206,46 @@ export const useDataStore = create<EcoVerseState>()(
             submissions: state.submissions.map(s => s.id === id ? {...s, status} : s)
         }));
       },
-       deleteSubmission: (id: string) => {
-        set(state => {
-          const user = state.user;
-          const submissionToDelete = state.submissions.find(s => s.id === id);
-          
-          if (!user || !submissionToDelete) {
-            return state;
-          }
+      deleteSubmission: (id: string) => {
+        const originalState = get();
+        const submissionToDelete = originalState.submissions.find(s => s.id === id);
 
-          let updatedUser = { ...user };
-          
-          // Only revert impact and points if the item wasn't sold
-          if (submissionToDelete.status !== 'Sold') {
-            const impactToRevert = submissionToDelete.impact;
-            
-            const newImpactStats: EnvironmentalImpact = {
-              co2Saved: Math.max(0, user.impactStats.co2Saved - (impactToRevert?.co2Saved || 0)),
-              waterSaved: Math.max(0, user.impactStats.waterSaved - (impactToRevert?.waterSaved || 0)),
-              treesEquivalent: Math.max(0, user.impactStats.treesEquivalent - (impactToRevert?.treesEquivalent || 0)),
-            };
+        if (!originalState.user || !submissionToDelete) {
+          return () => {}; // Return no-op if user or submission not found
+        }
+        
+        // Don't allow deletion of sold items for data integrity
+        if (submissionToDelete.status === 'Sold') {
+          return () => {};
+        }
 
-            updatedUser = {
-              ...updatedUser,
-              totalItems: Math.max(0, user.totalItems - 1),
-              impactStats: newImpactStats,
-            };
-          }
+        const newSubmissions = originalState.submissions.filter(s => s.id !== id);
+        
+        const impactToRevert = submissionToDelete.impact || { co2Saved: 0, waterSaved: 0, treesEquivalent: 0 };
+        
+        const updatedUser: User = {
+            ...originalState.user,
+            totalItems: Math.max(0, originalState.user.totalItems - 1),
+            impactStats: {
+              co2Saved: Math.max(0, originalState.user.impactStats.co2Saved - impactToRevert.co2Saved),
+              waterSaved: Math.max(0, originalState.user.impactStats.waterSaved - impactToRevert.waterSaved),
+              treesEquivalent: Math.max(0, originalState.user.impactStats.treesEquivalent - impactToRevert.treesEquivalent),
+            },
+        };
 
-          const newSubmissions = state.submissions.filter(s => s.id !== id);
-          const newLeaderboard = state.leaderboard.map(u => u.id === updatedUser.id ? updatedUser : u);
-          const newRegisteredUsers = state.registeredUsers.map(u => u.id === updatedUser.id ? { ...u, ...updatedUser } : u);
-
-          return {
+        const finalState = {
             user: updatedUser,
             submissions: newSubmissions,
-            leaderboard: newLeaderboard,
-            registeredUsers: newRegisteredUsers,
-          };
-        });
+            leaderboard: originalState.leaderboard.map(u => u.id === updatedUser.id ? updatedUser : u),
+            registeredUsers: originalState.registeredUsers.map(u => u.id === updatedUser.id ? { ...u, ...updatedUser } : u),
+        };
+        
+        set(finalState);
+
+        // Return a function to undo the deletion
+        return () => {
+          set(originalState);
+        };
       },
       claimItem: (id: string) => {
         set(state => {
@@ -297,7 +298,7 @@ export const useDataStore = create<EcoVerseState>()(
         let orderId: string | null = null;
         set(state => {
             const submission = state.submissions.find(s => s.id === itemId);
-            if (!submission) return state;
+            if (!submission || !state.user) return state;
 
             const partner = DELIVERY_PARTNERS[Math.floor(Math.random() * DELIVERY_PARTNERS.length)];
             const newOrderId = `ORD-${Date.now()}`;
@@ -310,7 +311,8 @@ export const useDataStore = create<EcoVerseState>()(
                 deliveryStatus: 'Confirmed' as const,
                 deliveryPartner: partner,
                 otp: newOtp,
-                deliveryAddress: deliveryAddress
+                deliveryAddress: deliveryAddress,
+                claimedByUserId: state.user!.id,
             } : s);
 
             return { submissions: newSubmissions };
@@ -329,8 +331,45 @@ export const useDataStore = create<EcoVerseState>()(
             });
 
             if (status === 'Delivered' && submissionToUpdate && submissionToUpdate.status !== 'Sold') {
-                get().claimItem(submissionToUpdate.id);
-                 return { ...get() }; // re-get state after claimItem runs
+                 // The state needs to be re-fetched inside the same update to avoid race conditions
+                 const currentState = get();
+                 const buyer = currentState.leaderboard.find(u => u.id === submissionToUpdate?.claimedByUserId);
+                 const seller = currentState.leaderboard.find(u => u.id === submissionToUpdate?.userId);
+                 const pointsAward = 10;
+                 let allUsers = [...currentState.leaderboard];
+                 let allRegisteredUsers = [...currentState.registeredUsers];
+
+                 if(buyer) {
+                    const updatedBuyerPoints = buyer.points + pointsAward;
+                    const updatedBuyerLevel = getLevel(updatedBuyerPoints).level;
+                    const updatedBuyer = { ...buyer, points: updatedBuyerPoints, level: updatedBuyerLevel };
+                    allUsers = allUsers.map(u => u.id === updatedBuyer.id ? updatedBuyer : u);
+                    allRegisteredUsers = allRegisteredUsers.map(u => u.id === updatedBuyer.id ? { ...u, ...updatedBuyer } : u);
+                 }
+
+                 if (seller) {
+                    const updatedSellerPoints = seller.points + pointsAward;
+                    const updatedSellerLevel = getLevel(updatedSellerPoints).level;
+                    const updatedSeller = { ...seller, points: updatedSellerPoints, level: updatedSellerLevel };
+                    allUsers = allUsers.map(u => u.id === sellerId ? updatedSeller : u);
+                    allRegisteredUsers = allRegisteredUsers.map(u => u.id === sellerId ? { ...u, ...updatedSeller } : u);
+                 }
+                
+                const finalSubmissions = newSubmissions.map(s => {
+                    if (s.id === submissionToUpdate?.id) {
+                        return { ...s, status: 'Sold' as const, points: pointsAward };
+                    }
+                    return s;
+                });
+                
+                const user = allUsers.find(u => u.id === state.user?.id) || state.user;
+
+                return {
+                    user,
+                    submissions: finalSubmissions,
+                    leaderboard: allUsers,
+                    registeredUsers: allRegisteredUsers
+                };
             }
 
             return { submissions: newSubmissions };
