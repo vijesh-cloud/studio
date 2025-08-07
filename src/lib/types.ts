@@ -1,9 +1,7 @@
 
-
 export interface EnvironmentalImpact {
   co2Saved: number; // in kg
   waterSaved: number; // in liters
-  volumeSaved: number; // in cubic meters
   treesEquivalent: number;
 }
 

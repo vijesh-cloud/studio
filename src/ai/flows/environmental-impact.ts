@@ -19,7 +19,6 @@ export type EnvironmentalImpactInput = z.infer<typeof EnvironmentalImpactInputSc
 const EnvironmentalImpactOutputSchema = z.object({
   co2Saved: z.number().describe('Estimated kilograms of CO2 saved.'),
   waterSaved: z.number().describe('Estimated liters of water saved.'),
-  volumeSaved: z.number().describe('Estimated cubic meters of landfill volume saved.'),
   treesEquivalent: z.number().describe('Equivalent number of trees saved for one year.'),
 });
 export type EnvironmentalImpactOutput = z.infer<typeof EnvironmentalImpactOutputSchema>;

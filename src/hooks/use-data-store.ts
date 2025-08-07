@@ -54,7 +54,6 @@ const generateFakeUsers = (count: number): User[] => {
       impactStats: {
         co2Saved: Math.random() * 5,
         waterSaved: Math.random() * 20,
-        volumeSaved: Math.random() * 0.1,
         treesEquivalent: Math.random() * 0.5,
       },
     };
@@ -86,7 +85,7 @@ export const useDataStore = create<EcoVerseState>()(
           lastRecycled: null,
           badges: [],
           totalItems: 0,
-          impactStats: { co2Saved: 0, waterSaved: 0, volumeSaved: 0, treesEquivalent: 0 },
+          impactStats: { co2Saved: 0, waterSaved: 0, treesEquivalent: 0 },
         };
         set(state => ({ 
             user: newUser, 
@@ -114,7 +113,7 @@ export const useDataStore = create<EcoVerseState>()(
           lastRecycled: null,
           badges: [],
           totalItems: 0,
-          impactStats: { co2Saved: 0, waterSaved: 0, volumeSaved: 0, treesEquivalent: 0 },
+          impactStats: { co2Saved: 0, waterSaved: 0, treesEquivalent: 0 },
         };
          set(state => ({ 
             user: newUser, 
@@ -179,7 +178,6 @@ export const useDataStore = create<EcoVerseState>()(
           impactStats: {
             co2Saved: user.impactStats.co2Saved + impact.co2Saved,
             waterSaved: user.impactStats.waterSaved + impact.waterSaved,
-            volumeSaved: (user.impactStats.volumeSaved || 0) + impact.volumeSaved,
             treesEquivalent: user.impactStats.treesEquivalent + impact.treesEquivalent,
           },
           badges: [...new Set([...user.badges, ...newBadges])],
@@ -199,31 +197,38 @@ export const useDataStore = create<EcoVerseState>()(
       },
       deleteSubmission: (id: string) => {
         set(state => {
-            const currentUser = state.user;
-            const submissionToDelete = state.submissions.find(s => s.id === id);
-
-            if (!currentUser || !submissionToDelete) {
+            const user = state.user;
+            if (!user) {
                 return state;
             }
 
-            // Always revert the environmental impact stats
+            const submissionToDelete = state.submissions.find(s => s.id === id);
+            if (!submissionToDelete) {
+                return state;
+            }
+            
+            // Revert points only if the item was not sold
+            const pointsToRevert = submissionToDelete.status !== 'Sold' ? submissionToDelete.points : 0;
+            const newPoints = Math.max(0, user.points - pointsToRevert);
+            const newLevelData = getLevel(newPoints);
+
+            // Revert environmental impact
+            const impactToRevert = submissionToDelete.impact;
             const newImpactStats: EnvironmentalImpact = {
-                co2Saved: Math.max(0, currentUser.impactStats.co2Saved - (submissionToDelete.impact?.co2Saved || 0)),
-                waterSaved: Math.max(0, currentUser.impactStats.waterSaved - (submissionToDelete.impact?.waterSaved || 0)),
-                volumeSaved: Math.max(0, (currentUser.impactStats.volumeSaved || 0) - (submissionToDelete.impact?.volumeSaved || 0)),
-                treesEquivalent: Math.max(0, currentUser.impactStats.treesEquivalent - (submissionToDelete.impact?.treesEquivalent || 0)),
+                co2Saved: Math.max(0, user.impactStats.co2Saved - (impactToRevert.co2Saved || 0)),
+                waterSaved: Math.max(0, user.impactStats.waterSaved - (impactToRevert.waterSaved || 0)),
+                treesEquivalent: Math.max(0, user.impactStats.treesEquivalent - (impactToRevert.treesEquivalent || 0)),
             };
 
             const updatedUser: User = {
-                ...currentUser,
-                totalItems: Math.max(0, currentUser.totalItems - 1),
+                ...user,
+                points: newPoints,
+                level: newLevelData.level,
+                totalItems: Math.max(0, user.totalItems - 1),
                 impactStats: newImpactStats,
             };
 
-            // Remove the submission from the list
             const newSubmissions = state.submissions.filter(s => s.id !== id);
-
-            // Update user in leaderboard and registered users list
             const newLeaderboard = state.leaderboard.map(u => u.id === updatedUser.id ? updatedUser : u);
             const newRegisteredUsers = state.registeredUsers.map(u => u.id === updatedUser.id ? { ...u, ...updatedUser } : u);
 

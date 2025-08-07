@@ -14,6 +14,7 @@ export async function classifyItemAction(
     console.error("Error in classifyItemAction:", error);
     // Return a structured error to the client
     return {
+      isValid: false,
       itemType: 'unknown',
       recyclingSuggestion: 'Could not classify item. Please try again.',
       confidence: 0,
@@ -47,7 +48,6 @@ export async function getImpactAction(
         return {
             co2Saved: 0,
             waterSaved: 0,
-            volumeSaved: 0,
             treesEquivalent: 0
         };
     }

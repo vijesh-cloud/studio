@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import { useDataStore } from '@/hooks/use-data-store';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Award, Droplets, Leaf, Recycle, Flame, BarChart, History, Gift, ThumbsUp, Box, ShoppingBag } from 'lucide-react';
+import { Award, Droplets, Leaf, Recycle, Flame, History, Gift, ThumbsUp, ShoppingBag } from 'lucide-react';
 import { StatCard } from '@/components/StatCard';
 import Link from 'next/link';
 import { Progress } from '@/components/ui/progress';
@@ -103,7 +103,7 @@ export default function HomePage() {
               </div>
             </CardTitle>
           </CardHeader>
-          <CardContent className="grid grid-cols-4 gap-4 text-center">
+          <CardContent className="grid grid-cols-3 gap-4 text-center">
               <div>
                   <Droplets className="mx-auto h-8 w-8 text-blue-500"/>
                   <p className="font-bold text-lg">{user.impactStats.waterSaved.toFixed(1)}L</p>
@@ -113,11 +113,6 @@ export default function HomePage() {
                   <Recycle className="mx-auto h-8 w-8 text-gray-500"/>
                   <p className="font-bold text-lg">{user.impactStats.co2Saved.toFixed(1)}kg</p>
                   <p className="text-xs text-muted-foreground">CO2 Reduced</p>
-              </div>
-               <div>
-                  <Box className="mx-auto h-8 w-8 text-yellow-600"/>
-                  <p className="font-bold text-lg">{(user.impactStats.volumeSaved || 0).toFixed(3)}m³</p>
-                  <p className="text-xs text-muted-foreground">Volume Saved</p>
               </div>
               <div>
                   <Leaf className="mx-auto h-8 w-8 text-green-500"/>
