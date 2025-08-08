@@ -17,7 +17,7 @@ import { Label } from '@/components/ui/label';
 import { Recycle, Loader2, Eye, EyeOff } from 'lucide-react';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
-import { confirmPasswordResetAction } from '@/app/actions';
+import { confirmPasswordResetAction, verifyPasswordResetCodeAction } from '@/app/actions';
 
 export default function ResetPasswordPage() {
   const router = useRouter();
@@ -29,6 +29,8 @@ export default function ResetPasswordPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [isVerified, setIsVerified] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -40,10 +42,31 @@ export default function ResetPasswordPage() {
         router.push('/forgot-password');
     }
   }, [searchParams, router, toast]);
+  
+  const handleVerifyCode = async () => {
+    if (!code) {
+        toast({ title: 'Please enter the verification code.', variant: 'destructive'});
+        return;
+    }
+    setIsVerifying(true);
+    try {
+        const result = await verifyPasswordResetCodeAction({ email, code });
+        if(result.success) {
+            setIsVerified(true);
+            toast({ title: 'Code verified!', description: 'You can now set a new password.', className: 'bg-primary text-primary-foreground'});
+        } else {
+            toast({ title: 'Invalid Code', description: result.message, variant: 'destructive' });
+        }
+    } catch(e: any) {
+         toast({ title: 'Verification Failed', description: e.message, variant: 'destructive' });
+    } finally {
+        setIsVerifying(false);
+    }
+  }
 
   const handleResetPassword = async () => {
-    if (!code || !newPassword || !confirmPassword) {
-      toast({ title: 'Please fill all fields.', variant: 'destructive' });
+    if (!newPassword || !confirmPassword) {
+      toast({ title: 'Please fill all password fields.', variant: 'destructive' });
       return;
     }
     if (newPassword !== confirmPassword) {
@@ -98,72 +121,90 @@ export default function ResetPasswordPage() {
           <CardHeader>
             <CardTitle className="text-2xl text-center">Reset Your Password</CardTitle>
             <CardDescription className="text-center pt-2">
-              Enter the verification code sent to {email} and your new password.
+              {isVerified 
+                ? 'Please enter your new password.'
+                : `Enter the verification code sent to ${email}.`
+              }
             </CardDescription>
           </CardHeader>
           <CardContent className="grid gap-4">
             <div className="grid gap-2">
                 <Label htmlFor="code">Verification Code</Label>
-                <Input
-                    id="code"
-                    placeholder="123456"
-                    value={code}
-                    onChange={(e) => setCode(e.target.value)}
-                    required
-                    disabled={isLoading}
-                    maxLength={6}
-                />
-            </div>
-             <div className="grid gap-2">
-                <Label htmlFor="newPassword">New Password</Label>
-                <div className="relative">
+                <div className="flex gap-2">
                     <Input
-                        id="newPassword"
-                        type={showPassword ? "text" : "password"}
-                        value={newPassword}
-                        onChange={(e) => setNewPassword(e.target.value)}
+                        id="code"
+                        placeholder="123456"
+                        value={code}
+                        onChange={(e) => setCode(e.target.value)}
                         required
-                        disabled={isLoading}
+                        disabled={isVerifying || isVerified}
+                        maxLength={6}
                     />
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      className="absolute top-0 right-0 h-full px-3 py-2 hover:bg-transparent"
-                      onClick={() => setShowPassword(p => !p)}
-                    >
-                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    </Button>
+                    {!isVerified && (
+                        <Button onClick={handleVerifyCode} disabled={isVerifying || code.length !== 6}>
+                           {isVerifying ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                           Verify
+                        </Button>
+                    )}
                 </div>
             </div>
-             <div className="grid gap-2">
-                <Label htmlFor="confirmPassword">Confirm New Password</Label>
-                 <div className="relative">
-                    <Input
-                        id="confirmPassword"
-                        type={showConfirmPassword ? "text" : "password"}
-                        value={confirmPassword}
-                        onChange={(e) => setConfirmPassword(e.target.value)}
-                        required
-                        disabled={isLoading}
-                    />
-                     <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      className="absolute top-0 right-0 h-full px-3 py-2 hover:bg-transparent"
-                      onClick={() => setShowConfirmPassword(p => !p)}
-                    >
-                      {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    </Button>
+
+            {isVerified && (
+              <>
+                <div className="grid gap-2">
+                    <Label htmlFor="newPassword">New Password</Label>
+                    <div className="relative">
+                        <Input
+                            id="newPassword"
+                            type={showPassword ? "text" : "password"}
+                            value={newPassword}
+                            onChange={(e) => setNewPassword(e.target.value)}
+                            required
+                            disabled={isLoading}
+                        />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="absolute top-0 right-0 h-full px-3 py-2 hover:bg-transparent"
+                          onClick={() => setShowPassword(p => !p)}
+                        >
+                          {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </Button>
+                    </div>
                 </div>
-            </div>
+                <div className="grid gap-2">
+                    <Label htmlFor="confirmPassword">Confirm New Password</Label>
+                    <div className="relative">
+                        <Input
+                            id="confirmPassword"
+                            type={showConfirmPassword ? "text" : "password"}
+                            value={confirmPassword}
+                            onChange={(e) => setConfirmPassword(e.target.value)}
+                            required
+                            disabled={isLoading}
+                        />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="absolute top-0 right-0 h-full px-3 py-2 hover:bg-transparent"
+                          onClick={() => setShowConfirmPassword(p => !p)}
+                        >
+                          {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </Button>
+                    </div>
+                </div>
+              </>
+            )}
           </CardContent>
           <CardFooter className="flex flex-col gap-4">
-            <Button className="w-full" onClick={handleResetPassword} disabled={isLoading}>
-              {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Reset Password
-            </Button>
+            {isVerified && (
+              <Button className="w-full" onClick={handleResetPassword} disabled={isLoading}>
+                {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Reset Password
+              </Button>
+            )}
             <Link href="/login" className="text-sm underline">
               Back to login
             </Link>
