@@ -5,15 +5,12 @@ import { classifyWasteItem } from '@/ai/flows/ai-item-classification';
 import { getPersonalizedRecyclingTips } from '@/ai/flows/personalized-recycling-tips';
 import { getEnvironmentalImpact } from '@/ai/flows/environmental-impact';
 import { auth } from '@/lib/firebase';
-import { sendPasswordResetEmail } from 'firebase/auth';
+import { sendPasswordResetEmail, confirmPasswordReset, verifyPasswordResetCode } from 'firebase/auth';
 
 import type { 
     ClassifyWasteItemInput, ClassifyWasteItemOutput,
     PersonalizedRecyclingTipsInput, PersonalizedRecyclingTipsOutput,
     EnvironmentalImpactInput, EnvironmentalImpactOutput,
-    SendPasswordResetCodeInput, SendPasswordResetCodeOutput,
-    VerifyPasswordResetCodeInput, VerifyPasswordResetCodeOutput,
-    ConfirmPasswordResetInput, ConfirmPasswordResetOutput,
 } from '@/lib/types';
 
 
@@ -71,11 +68,36 @@ export async function sendPasswordResetAction(
   email: string
 ): Promise<{ success: boolean; message: string }> {
   try {
+    // The actionCodeSettings object is not strictly needed for this to work
+    // but it's good practice. The URL would be configured in the Firebase Console.
     await sendPasswordResetEmail(auth, email);
-    return { success: true, message: 'Password reset email sent successfully.' };
+    return { success: true, message: 'Password reset email sent successfully. Please check your inbox.' };
   } catch (error: any) {
     console.error('Error sending password reset email:', error);
     return { success: false, message: error.message || 'Failed to send password reset email.' };
   }
 }
-    
+
+export async function resetPasswordAction(
+    oobCode: string,
+    newPassword: string
+): Promise<{ success: boolean; message: string; }> {
+     if (!oobCode || !newPassword) {
+        return { success: false, message: 'Invalid request. Code and new password are required.' };
+    }
+    try {
+        // Verify the code is valid first. This will throw an error if invalid.
+        await verifyPasswordResetCode(auth, oobCode);
+        
+        // If the code is valid, proceed to reset the password.
+        await confirmPasswordReset(auth, oobCode, newPassword);
+        
+        return { success: true, message: 'Your password has been successfully reset. Please log in.' };
+    } catch (error: any) {
+        console.error('Error resetting password:', error);
+        if (error.code === 'auth/invalid-action-code') {
+            return { success: false, message: 'The password reset link is invalid or has expired. Please request a new one.' };
+        }
+        return { success: false, message: error.message || 'Failed to reset password.' };
+    }
+}
