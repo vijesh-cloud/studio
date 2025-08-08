@@ -10,18 +10,13 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
+import {
+    EnvironmentalImpactInputSchema,
+    EnvironmentalImpactOutputSchema,
+    type EnvironmentalImpactInput,
+    type EnvironmentalImpactOutput
+} from '@/lib/types';
 
-const EnvironmentalImpactInputSchema = z.object({
-  itemType: z.string().describe('The type of item being recycled (e.g., plastic bottle, aluminum can).'),
-});
-export type EnvironmentalImpactInput = z.infer<typeof EnvironmentalImpactInputSchema>;
-
-const EnvironmentalImpactOutputSchema = z.object({
-  co2Saved: z.number().describe('Estimated kilograms of CO2 saved.'),
-  waterSaved: z.number().describe('Estimated liters of water saved.'),
-  treesEquivalent: z.number().describe('Equivalent number of trees saved for one year.'),
-});
-export type EnvironmentalImpactOutput = z.infer<typeof EnvironmentalImpactOutputSchema>;
 
 export async function getEnvironmentalImpact(
   input: EnvironmentalImpactInput

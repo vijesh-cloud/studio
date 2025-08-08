@@ -5,12 +5,23 @@
  * @fileOverview Manages the password reset process by sending a verification code.
  *
  * - sendPasswordResetCode - Generates a 6-digit code and emails it to the user.
- * - verifyPasswordResetCode - Verifies the provided code (placeholder for now).
+ * - verifyPasswordResetCode - Verifies the provided code.
  */
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 import * as nodemailer from 'nodemailer';
+import { 
+    SendPasswordResetCodeInputSchema, 
+    SendPasswordResetCodeOutputSchema, 
+    VerifyPasswordResetCodeInputSchema,
+    VerifyPasswordResetCodeOutputSchema,
+    type SendPasswordResetCodeInput, 
+    type SendPasswordResetCodeOutput,
+    type VerifyPasswordResetCodeInput,
+    type VerifyPasswordResetCodeOutput
+} from '@/lib/types';
+
 
 // IMPORTANT: This is a placeholder for a secure secret management system.
 // In a real production environment, use something like Google Secret Manager.
@@ -23,21 +34,9 @@ const FROM_EMAIL = process.env.FROM_EMAIL || 'noreply@ecoverse.com';
 // For this example, we'll store it in memory. This is NOT production-safe.
 const codeStore: Record<string, { code: string; expires: number }> = {};
 
-
-export const SendPasswordResetCodeInputSchema = z.object({
-  email: z.string().email().describe('The user\'s email address.'),
-});
-export type SendPasswordResetCodeInput = z.infer<typeof SendPasswordResetCodeInputSchema>;
-
-export const SendPasswordResetCodeOutputSchema = z.object({
-  success: z.boolean(),
-  message: z.string(),
-});
-export type SendPasswordResetCodeOutput = z.infer<typeof SendPasswordResetCodeOutputSchema>;
-
-export const sendPasswordResetCode = ai.defineFlow(
+const sendPasswordResetCodeFlow = ai.defineFlow(
   {
-    name: 'sendPasswordResetCode',
+    name: 'sendPasswordResetCodeFlow',
     inputSchema: SendPasswordResetCodeInputSchema,
     outputSchema: SendPasswordResetCodeOutputSchema,
   },
@@ -85,24 +84,8 @@ export const sendPasswordResetCode = ai.defineFlow(
   }
 );
 
-
-// --- Verification Flow (Conceptual) ---
-
-export const VerifyPasswordResetCodeInputSchema = z.object({
-  email: z.string().email(),
-  code: z.string().length(6),
-});
-export type VerifyPasswordResetCodeInput = z.infer<typeof VerifyPasswordResetCodeInputSchema>;
-
-export const VerifyPasswordResetCodeOutputSchema = z.object({
-  success: z.boolean(),
-  message: z.string(),
-});
-export type VerifyPasswordResetCodeOutput = z.infer<typeof VerifyPasswordResetCodeOutputSchema>;
-
-
-export const verifyPasswordResetCode = ai.defineFlow({
-    name: 'verifyPasswordResetCode',
+const verifyPasswordResetCodeFlow = ai.defineFlow({
+    name: 'verifyPasswordResetCodeFlow',
     inputSchema: VerifyPasswordResetCodeInputSchema,
     outputSchema: VerifyPasswordResetCodeOutputSchema,
 }, async (input) => {
@@ -123,3 +106,11 @@ export const verifyPasswordResetCode = ai.defineFlow({
     delete codeStore[input.email];
     return { success: true, message: 'Code verified successfully.' };
 });
+
+export async function sendPasswordResetCode(input: SendPasswordResetCodeInput): Promise<SendPasswordResetCodeOutput> {
+    return await sendPasswordResetCodeFlow(input);
+}
+
+export async function verifyPasswordResetCode(input: VerifyPasswordResetCodeInput): Promise<VerifyPasswordResetCodeOutput> {
+    return await verifyPasswordResetCodeFlow(input);
+}

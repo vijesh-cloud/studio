@@ -17,7 +17,7 @@ import { Recycle, Loader2, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
-import { sendPasswordResetCode } from '@/ai/flows/forgot-password';
+import { sendPasswordResetCodeAction } from '@/app/actions';
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('');
@@ -32,14 +32,19 @@ export default function ForgotPasswordPage() {
     }
     setIsLoading(true);
     try {
-      await sendPasswordResetCode({ email });
-      toast({
-        title: 'Verification Code Sent',
-        description: 'Please check your inbox (and spam folder) for your 6-digit code.',
-        className: 'bg-primary text-primary-foreground',
-        duration: 9000,
-      });
-      router.push(`/reset-password?email=${encodeURIComponent(email)}`);
+      const result = await sendPasswordResetCodeAction({ email });
+
+      if (result.success) {
+        toast({
+          title: 'Verification Code Sent',
+          description: 'Please check your inbox (and spam folder) for your 6-digit code.',
+          className: 'bg-primary text-primary-foreground',
+          duration: 9000,
+        });
+        router.push(`/reset-password?email=${encodeURIComponent(email)}`);
+      } else {
+        throw new Error(result.message);
+      }
     } catch (error: any) {
       console.error('Forgot Password Error:', error);
       toast({
@@ -60,9 +65,11 @@ export default function ForgotPasswordPage() {
         </div>
         <Card>
           <CardHeader>
-            <Button variant="ghost" size="icon" className="absolute" onClick={() => router.back()}>
-                <ArrowLeft />
-            </Button>
+            <Link href="/login" className="absolute top-4 left-4">
+              <Button variant="ghost" size="icon">
+                  <ArrowLeft />
+              </Button>
+            </Link>
             <CardTitle className="text-2xl text-center">Forgot Password</CardTitle>
             <CardDescription className="text-center pt-2">
               Enter your email and we'll send you a code to reset your password.

@@ -1,4 +1,3 @@
-// src/ai/flows/personalized-recycling-tips.ts
 'use server';
 
 /**
@@ -11,27 +10,13 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
+import {
+    PersonalizedRecyclingTipsInputSchema,
+    PersonalizedRecyclingTipsOutputSchema,
+    type PersonalizedRecyclingTipsInput,
+    type PersonalizedRecyclingTipsOutput
+} from '@/lib/types';
 
-const PersonalizedRecyclingTipsInputSchema = z.object({
-  location: z.string().describe('The user\u2019s current location.'),
-  recyclingHistory: z
-    .string()
-    .describe('A summary of the user\u2019s past recycling activities.'),
-});
-export type PersonalizedRecyclingTipsInput = z.infer<
-  typeof PersonalizedRecyclingTipsInputSchema
->;
-
-const PersonalizedRecyclingTipsOutputSchema = z.object({
-  tips: z
-    .string()
-    .describe(
-      'A list of personalized recycling tips based on the user\u2019s location and recycling history.'
-    ),
-});
-export type PersonalizedRecyclingTipsOutput = z.infer<
-  typeof PersonalizedRecyclingTipsOutputSchema
->;
 
 export async function getPersonalizedRecyclingTips(
   input: PersonalizedRecyclingTipsInput

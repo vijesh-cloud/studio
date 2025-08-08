@@ -17,8 +17,7 @@ import { Recycle, Loader2, ArrowLeft, Eye, EyeOff } from 'lucide-react';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { confirmPasswordReset } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
+import { resetPasswordAction } from '@/app/actions';
 
 function ResetPasswordContent() {
   const router = useRouter();
@@ -41,7 +40,7 @@ function ResetPasswordContent() {
   }, [emailFromQuery]);
 
   const handleResetPassword = async () => {
-    if (!code || !newPassword || !confirmPassword) {
+    if (!email || !code || !newPassword || !confirmPassword) {
       toast({ title: 'Please fill all fields.', variant: 'destructive' });
       return;
     }
@@ -51,20 +50,23 @@ function ResetPasswordContent() {
     }
     setIsLoading(true);
     try {
-      await confirmPasswordReset(auth, code, newPassword);
-      toast({
-        title: 'Password Reset Successful',
-        description: 'You can now log in with your new password.',
-        className: 'bg-primary text-primary-foreground',
-      });
-      router.push('/login');
+      const result = await resetPasswordAction({ email, code, newPassword });
+
+      if (result.success) {
+        toast({
+            title: 'Password Reset Successful',
+            description: 'You can now log in with your new password.',
+            className: 'bg-primary text-primary-foreground',
+        });
+        router.push('/login');
+      } else {
+        throw new Error(result.message);
+      }
     } catch (error: any) {
       console.error('Reset Password Error:', error);
       toast({
         title: 'Password Reset Failed',
-        description: error.code === 'auth/invalid-action-code' 
-            ? 'The code is invalid or has expired. Please request a new one.' 
-            : 'An error occurred. Please try again.',
+        description: error.message || 'An error occurred. Please try again.',
         variant: 'destructive',
       });
     } finally {
@@ -80,9 +82,11 @@ function ResetPasswordContent() {
         </div>
         <Card>
           <CardHeader>
-             <Button variant="ghost" size="icon" className="absolute" onClick={() => router.push('/forgot-password')}>
-                <ArrowLeft />
-            </Button>
+             <Link href="/forgot-password">
+                <Button variant="ghost" size="icon" className="absolute top-4 left-4">
+                    <ArrowLeft />
+                </Button>
+            </Link>
             <CardTitle className="text-2xl text-center">Reset Your Password</CardTitle>
             <CardDescription className="text-center pt-2">
               Enter the code from your email and your new password.
@@ -98,7 +102,7 @@ function ResetPasswordContent() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                disabled={isLoading}
+                disabled={isLoading || !!emailFromQuery}
               />
             </div>
             <div className="grid gap-2">
