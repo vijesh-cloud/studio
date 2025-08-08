@@ -94,7 +94,7 @@ export default function LoginPage() {
         });
       }
     } catch (error: any) {
-      if (error.code !== 'auth/cancelled-popup-request') {
+      if (error.code !== 'auth/popup-closed-by-user') {
         console.error("Google Sign-In Error:", error);
         toast({
           title: "Login Failed",
