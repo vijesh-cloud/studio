@@ -22,6 +22,7 @@ import { sendPasswordResetCodeAction } from '@/app/actions';
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [emailSent, setEmailSent] = useState(false);
   const { toast } = useToast();
   const router = useRouter();
 
@@ -36,12 +37,12 @@ export default function ForgotPasswordPage() {
 
       if (result.success) {
         toast({
-          title: 'Verification Code Sent',
-          description: 'Please check your inbox (and spam folder) for your 6-digit code.',
+          title: 'Reset Link Sent',
+          description: 'Please check your inbox (and spam folder) for a link to reset your password.',
           className: 'bg-primary text-primary-foreground',
           duration: 9000,
         });
-        router.push(`/reset-password?email=${encodeURIComponent(email)}`);
+        setEmailSent(true);
       } else {
         throw new Error(result.message);
       }
@@ -71,35 +72,47 @@ export default function ForgotPasswordPage() {
               </Button>
             </Link>
             <CardTitle className="text-2xl text-center">Forgot Password</CardTitle>
-            <CardDescription className="text-center pt-2">
-              Enter your email and we'll send you a code to reset your password.
-            </CardDescription>
+            {emailSent ? (
+              <CardDescription className="text-center pt-2 text-primary">
+                A password reset link has been sent to your email address. Please check your inbox.
+              </CardDescription>
+            ) : (
+              <CardDescription className="text-center pt-2">
+                Enter your email and we'll send you a link to reset your password.
+              </CardDescription>
+            )}
           </CardHeader>
-          <CardContent className="grid gap-4">
-            <div className="grid gap-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="m@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                disabled={isLoading}
-              />
-            </div>
-          </CardContent>
+          {!emailSent && (
+            <>
+              <CardContent className="grid gap-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="m@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    disabled={isLoading}
+                  />
+                </div>
+              </CardContent>
+              <CardFooter className="flex flex-col gap-4">
+                <Button className="w-full" onClick={handleResetPassword} disabled={isLoading}>
+                  {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  Send Reset Link
+                </Button>
+              </CardFooter>
+            </>
+          )}
           <CardFooter className="flex flex-col gap-4">
-            <Button className="w-full" onClick={handleResetPassword} disabled={isLoading}>
-              {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Send Code
-            </Button>
-            <div className="text-center text-sm">
-              Remember your password?{' '}
-              <Link href="/login" className="underline">
-                Login
-              </Link>
-            </div>
+             <div className="text-center text-sm">
+                Remember your password?{' '}
+                <Link href="/login" className="underline">
+                    Login
+                </Link>
+             </div>
           </CardFooter>
         </Card>
       </div>

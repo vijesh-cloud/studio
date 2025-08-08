@@ -17,30 +17,47 @@ import { Recycle, Loader2, ArrowLeft, Eye, EyeOff } from 'lucide-react';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { resetPasswordAction } from '@/app/actions';
+import { auth } from '@/lib/firebase';
+import { confirmPasswordReset, verifyPasswordResetCode } from 'firebase/auth';
 
 function ResetPasswordContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const emailFromQuery = searchParams.get('email');
+  const oobCode = searchParams.get('oobCode');
   
-  const [code, setCode] = useState('');
-  const [email, setEmail] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [email, setEmail] = useState('');
+  const [isValidCode, setIsValidCode] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
-    if (emailFromQuery) {
-      setEmail(emailFromQuery);
-    }
-  }, [emailFromQuery]);
+    const checkCode = async () => {
+        if (!oobCode) {
+            toast({ title: "Invalid password reset link.", variant: "destructive" });
+            router.push('/login');
+            return;
+        }
+        setIsLoading(true);
+        try {
+            const userEmail = await verifyPasswordResetCode(auth, oobCode);
+            setEmail(userEmail);
+            setIsValidCode(true);
+        } catch (error) {
+            toast({ title: "Invalid or expired password reset link.", variant: "destructive" });
+            router.push('/forgot-password');
+        } finally {
+            setIsLoading(false);
+        }
+    };
+    checkCode();
+  }, [oobCode, router, toast]);
 
   const handleResetPassword = async () => {
-    if (!email || !code || !newPassword || !confirmPassword) {
+    if (!newPassword || !confirmPassword) {
       toast({ title: 'Please fill all fields.', variant: 'destructive' });
       return;
     }
@@ -48,20 +65,17 @@ function ResetPasswordContent() {
       toast({ title: 'Passwords do not match.', variant: 'destructive' });
       return;
     }
+    if (!oobCode) return;
+    
     setIsLoading(true);
     try {
-      const result = await resetPasswordAction({ email, code, newPassword });
-
-      if (result.success) {
-        toast({
-            title: 'Password Reset Successful',
-            description: 'You can now log in with your new password.',
-            className: 'bg-primary text-primary-foreground',
-        });
-        router.push('/login');
-      } else {
-        throw new Error(result.message);
-      }
+      await confirmPasswordReset(auth, oobCode, newPassword);
+      toast({
+          title: 'Password Reset Successful',
+          description: 'You can now log in with your new password.',
+          className: 'bg-primary text-primary-foreground',
+      });
+      router.push('/login');
     } catch (error: any) {
       console.error('Reset Password Error:', error);
       toast({
@@ -74,6 +88,14 @@ function ResetPasswordContent() {
     }
   };
 
+  if (!isValidCode) {
+    return (
+        <div className="flex items-center justify-center min-h-screen">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+    );
+  }
+
   return (
     <div className="flex items-center justify-center min-h-screen bg-muted/40">
       <div className="w-full max-w-md p-4">
@@ -82,41 +104,17 @@ function ResetPasswordContent() {
         </div>
         <Card>
           <CardHeader>
-             <Link href="/forgot-password">
+             <Link href="/login">
                 <Button variant="ghost" size="icon" className="absolute top-4 left-4">
                     <ArrowLeft />
                 </Button>
             </Link>
             <CardTitle className="text-2xl text-center">Reset Your Password</CardTitle>
             <CardDescription className="text-center pt-2">
-              Enter the code from your email and your new password.
+              Enter a new password for {email}.
             </CardDescription>
           </CardHeader>
           <CardContent className="grid gap-4">
-            <div className="grid gap-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="m@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                disabled={isLoading || !!emailFromQuery}
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="code">Verification Code</Label>
-              <Input
-                id="code"
-                type="text"
-                placeholder="123456"
-                value={code}
-                onChange={(e) => setCode(e.target.value)}
-                required
-                disabled={isLoading}
-              />
-            </div>
             <div className="grid gap-2">
               <Label htmlFor="new-password">New Password</Label>
                <div className="relative">
@@ -157,12 +155,6 @@ function ResetPasswordContent() {
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Reset Password
             </Button>
-            <div className="text-center text-sm">
-              Remembered your password?{' '}
-              <Link href="/login" className="underline">
-                Login
-              </Link>
-            </div>
           </CardFooter>
         </Card>
       </div>

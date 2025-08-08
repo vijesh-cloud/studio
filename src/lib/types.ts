@@ -125,7 +125,7 @@ export type SendPasswordResetCodeOutput = z.infer<typeof SendPasswordResetCodeOu
 
 export const VerifyPasswordResetCodeInputSchema = z.object({
   email: z.string().email(),
-  code: z.string().length(6),
+  code: z.string(), // Can be the oobCode from Firebase
 });
 export type VerifyPasswordResetCodeInput = z.infer<typeof VerifyPasswordResetCodeInputSchema>;
 
