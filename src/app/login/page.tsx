@@ -179,8 +179,8 @@ export default function LoginPage() {
                   </div>
                 </div>
                 <div className="flex items-center">
-                  <Link href="/forgot-password" legacyBehavior passHref>
-                    <a className="text-sm underline">Forgot password?</a>
+                  <Link href="/forgot-password" className="text-sm underline">
+                    Forgot password?
                   </Link>
                 </div>
               </CardContent>
