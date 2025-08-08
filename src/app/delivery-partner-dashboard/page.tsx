@@ -21,7 +21,7 @@ import {
   ChartTooltipContent,
   ChartConfig,
 } from '@/components/ui/chart';
-import { BarChart, CartesianGrid, XAxis, Bar, ResponsiveContainer } from 'recharts';
+import { BarChart, CartesianGrid, XAxis, Bar, ResponsiveContainer, Tooltip as RechartsTooltip } from 'recharts';
 import { isToday, isThisMonth, eachDayOfInterval, format } from 'date-fns';
 
 export default function DeliveryPartnerDashboard() {
@@ -171,9 +171,13 @@ export default function DeliveryPartnerDashboard() {
                         tickLine={false}
                         tickMargin={10}
                         axisLine={false}
+                        stroke="hsl(var(--muted-foreground))"
                     />
-                    <ChartTooltip content={<ChartTooltipContent />} />
-                    <Bar dataKey="pickups" fill="var(--color-pickups)" radius={4} />
+                    <RechartsTooltip 
+                        cursor={{fill: 'hsl(var(--accent) / 0.3)'}}
+                        content={<ChartTooltipContent />} 
+                    />
+                    <Bar dataKey="pickups" fill="hsl(var(--primary))" radius={4} />
                 </BarChart>
            </ChartContainer>
         </CardContent>
@@ -241,5 +245,3 @@ export default function DeliveryPartnerDashboard() {
     </div>
   );
 }
-
-    
