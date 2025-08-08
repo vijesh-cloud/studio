@@ -11,15 +11,6 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-  DialogFooter,
-  DialogClose,
-} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Recycle, UserCheck, Loader2, Eye, EyeOff } from 'lucide-react';
@@ -188,27 +179,9 @@ export default function LoginPage() {
                   </div>
                 </div>
                 <div className="flex items-center">
-                    <Dialog>
-                        <DialogTrigger asChild>
-                            <Button variant="link" className="px-0">Forgot password?</Button>
-                        </DialogTrigger>
-                        <DialogContent>
-                            <DialogHeader>
-                                <DialogTitle>Reset Password</DialogTitle>
-                            </DialogHeader>
-                            <p className="text-sm text-muted-foreground">This is a simulated flow. In a real app, this would send a secure email link. Enter your email to proceed.</p>
-                            <div className="grid gap-2">
-                                <Label htmlFor="reset-email">Email</Label>
-                                <Input id="reset-email" type="email" placeholder="m@example.com" />
-                            </div>
-                            <DialogFooter>
-                                <DialogClose asChild>
-                                    <Button variant="outline">Cancel</Button>
-                                </DialogClose>
-                                <Button onClick={() => toast({ title: "Check your email (simulated)", description: "A password reset link has been sent."})}>Send Reset Link</Button>
-                            </DialogFooter>
-                        </DialogContent>
-                    </Dialog>
+                  <Link href="/forgot-password" legacyBehavior passHref>
+                    <a className="text-sm underline">Forgot password?</a>
+                  </Link>
                 </div>
               </CardContent>
               <CardFooter className="flex flex-col gap-4">
@@ -271,5 +244,3 @@ export default function LoginPage() {
     </div>
   );
 }
-
-    
