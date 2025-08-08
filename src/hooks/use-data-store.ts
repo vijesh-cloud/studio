@@ -72,12 +72,7 @@ export const useDataStore = create<EcoVerseState>()(
       leaderboard: [],
       registeredUsers: [],
       setUser: (name, email) => {
-         const existingUser = get().registeredUsers.find(u => u.email === email);
-         if (existingUser) {
-            set({ user: existingUser });
-            return;
-         }
-        const newUser: StoredUser = {
+        const resetUser: StoredUser = {
           id: `user-${Date.now()}`,
           name,
           email,
@@ -90,16 +85,35 @@ export const useDataStore = create<EcoVerseState>()(
           totalItems: 0,
           impactStats: { co2Saved: 0, waterSaved: 0, treesEquivalent: 0 },
         };
+
+        const existingUser = get().registeredUsers.find(u => u.email === email);
+        if (existingUser) {
+            const freshUser = { ...existingUser, ...resetUser, id: existingUser.id, name: existingUser.name };
+            set({ user: freshUser });
+            return;
+        }
+
         set(state => ({ 
-            user: newUser, 
-            leaderboard: [...generateFakeUsers(49), newUser],
-            registeredUsers: [...state.registeredUsers, newUser]
+            user: resetUser, 
+            leaderboard: [...generateFakeUsers(49), resetUser],
+            registeredUsers: [...state.registeredUsers, resetUser]
         }));
       },
       loginUser: (email: string): boolean => {
         const userToLogin = get().registeredUsers.find(u => u.email === email);
         if (userToLogin) {
-            set({ user: userToLogin, deliveryPartner: null });
+            // Reset stats on login for a clean slate
+            const freshUser: User = {
+                ...userToLogin,
+                points: 0,
+                level: 1,
+                streak: 0,
+                lastRecycled: null,
+                badges: [],
+                totalItems: 0,
+                impactStats: { co2Saved: 0, waterSaved: 0, treesEquivalent: 0 },
+            };
+            set({ user: freshUser, deliveryPartner: null, submissions: [] });
             return true;
         }
         return false;
@@ -209,39 +223,67 @@ export const useDataStore = create<EcoVerseState>()(
       deleteSubmission: (id: string) => {
         const originalState = get();
         const submissionToDelete = originalState.submissions.find(s => s.id === id);
-
+      
         if (!originalState.user || !submissionToDelete) {
           return () => {}; // Return no-op if user or submission not found
         }
-        
+      
         // Don't allow deletion of sold items for data integrity
         if (submissionToDelete.status === 'Sold') {
           return () => {};
         }
-
+      
         const newSubmissions = originalState.submissions.filter(s => s.id !== id);
-        
-        const impactToRevert = submissionToDelete.impact || { co2Saved: 0, waterSaved: 0, treesEquivalent: 0 };
-        
+      
+        // Recalculate everything from scratch based on the remaining submissions
+        let totalItems = 0;
+        let co2Saved = 0;
+        let waterSaved = 0;
+        let treesEquivalent = 0;
+        let points = 0;
+      
+        newSubmissions.forEach(sub => {
+          if (sub.userId === originalState.user!.id) {
+            totalItems += 1;
+            co2Saved += sub.impact?.co2Saved || 0;
+            waterSaved += sub.impact?.waterSaved || 0;
+            treesEquivalent += sub.impact?.treesEquivalent || 0;
+            if (sub.status === 'Sold') {
+              points += sub.points || 0;
+            }
+          }
+        });
+      
+        // Also add points for items they claimed
+        newSubmissions.forEach(sub => {
+          if (sub.claimedByUserId === originalState.user!.id) {
+            points += 10; // Assuming 10 points for claiming
+          }
+        });
+      
+        const updatedLevel = getLevel(points);
+      
         const updatedUser: User = {
-            ...originalState.user,
-            totalItems: Math.max(0, originalState.user.totalItems - 1),
-            impactStats: {
-              co2Saved: Math.max(0, originalState.user.impactStats.co2Saved - impactToRevert.co2Saved),
-              waterSaved: Math.max(0, originalState.user.impactStats.waterSaved - impactToRevert.waterSaved),
-              treesEquivalent: Math.max(0, originalState.user.impactStats.treesEquivalent - impactToRevert.treesEquivalent),
-            },
+          ...originalState.user,
+          totalItems,
+          points,
+          level: updatedLevel.level,
+          impactStats: {
+            co2Saved,
+            waterSaved,
+            treesEquivalent,
+          },
         };
-
+      
         const finalState = {
-            user: updatedUser,
-            submissions: newSubmissions,
-            leaderboard: originalState.leaderboard.map(u => u.id === updatedUser.id ? updatedUser : u),
-            registeredUsers: originalState.registeredUsers.map(u => u.id === updatedUser.id ? { ...u, ...updatedUser } : u),
+          user: updatedUser,
+          submissions: newSubmissions,
+          leaderboard: originalState.leaderboard.map(u => u.id === updatedUser.id ? updatedUser : u),
+          registeredUsers: originalState.registeredUsers.map(u => u.id === updatedUser.id ? { ...u, ...updatedUser } : u),
         };
-        
+      
         set(finalState);
-
+      
         // Return a function to undo the deletion
         return () => {
           set(originalState);
@@ -398,7 +440,7 @@ export const useDataStore = create<EcoVerseState>()(
       },
     }),
     {
-      name: 'ecoverse-storage',
+      name: 'ecoverse-storage-v2', // Changed storage name to force reset
       storage: createJSONStorage(() => localStorage),
     }
   )
