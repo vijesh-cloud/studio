@@ -7,7 +7,7 @@ const firebaseConfig = {
   "appId": "1:352417571073:web:a477bef8d5a7f1ec543b00",
   "storageBucket": "ecoverse-dzcey.appspot.com",
   "apiKey": "AIzaSyBHoKo3DfI5S-Jq8I0ePOkXtmOg2oOgyhk",
-  "authDomain": "localhost",
+  "authDomain": "ecoverse-dzcey.firebaseapp.com",
   "messagingSenderId": "352417571073"
 };
 
