@@ -19,7 +19,7 @@ import { useRouter } from 'next/navigation';
 import { useDataStore } from '@/hooks/use-data-store';
 import { useToast } from '@/hooks/use-toast';
 import { auth } from '@/lib/firebase';
-import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+import { GoogleAuthProvider, createUserWithEmailAndPassword, signInWithPopup, updateProfile } from 'firebase/auth';
 
 const GoogleIcon = (props: React.SVGProps<SVGSVGElement>) => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="24px" height="24px" {...props}>
@@ -39,10 +39,10 @@ export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const router = useRouter();
-  const { registerUser } = useDataStore();
+  const { addUserToStore } = useDataStore();
   const { toast } = useToast();
 
-  const handleRegister = () => {
+  const handleRegister = async () => {
     if (password !== confirmPassword) {
       toast({
         title: "Passwords do not match",
@@ -52,13 +52,26 @@ export default function RegisterPage() {
       return;
     }
     if (name && email && password) {
-      registerUser(name, email);
-      router.push('/');
-      toast({
-          title: "Registration Successful!",
-          description: "Welcome to EcoVerse!",
-          className: "bg-primary text-primary-foreground",
-      })
+       try {
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        await updateProfile(userCredential.user, { displayName: name });
+        
+        addUserToStore(name, email);
+
+        router.push('/');
+        toast({
+            title: "Registration Successful!",
+            description: "Welcome to EcoVerse!",
+            className: "bg-primary text-primary-foreground",
+        })
+      } catch (error: any) {
+        console.error("Registration Error:", error);
+        toast({
+            title: "Registration Failed",
+            description: error.message,
+            variant: "destructive",
+        });
+      }
     }
   };
 
@@ -68,7 +81,7 @@ export default function RegisterPage() {
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
       if (user.displayName && user.email) {
-        registerUser(user.displayName, user.email);
+        addUserToStore(user.displayName, user.email);
         router.push('/');
         toast({
           title: "Registration Successful!",

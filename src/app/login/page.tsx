@@ -18,7 +18,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useDataStore } from '@/hooks/use-data-store';
 import { auth } from '@/lib/firebase';
-import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+import { GoogleAuthProvider, signInWithEmailAndPassword, signInWithPopup } from 'firebase/auth';
 import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
@@ -41,24 +41,24 @@ export default function LoginPage() {
   const [isPartnerLoading, setIsPartnerLoading] = useState(false);
 
   const router = useRouter();
-  const { loginUser, setUser, loginDeliveryPartner } = useDataStore();
+  const { loginDeliveryPartner } = useDataStore();
   const { toast } = useToast();
 
-  const handleUserLogin = () => {
+  const handleUserLogin = async () => {
     if (!email || !password) {
         toast({ title: "Please enter email and password.", variant: "destructive" });
         return;
     }
     setIsLoading(true);
-    setTimeout(() => {
-        const success = loginUser(email);
-        if (success) {
-            router.push('/');
-        } else {
-            toast({ title: "Account not found.", description: "Please check your email or register for a new account.", variant: "destructive" });
-        }
-        setIsLoading(false);
-    }, 1000);
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+      router.push('/');
+    } catch (error: any) {
+      console.error("Login Error:", error);
+      toast({ title: "Login Failed", description: "Invalid email or password.", variant: "destructive" });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handlePartnerLogin = () => {
@@ -83,17 +83,14 @@ export default function LoginPage() {
     setIsLoading(true);
     try {
       const provider = new GoogleAuthProvider();
-      const result = await signInWithPopup(auth, provider);
-      const user = result.user;
-      if (user.displayName && user.email) {
-        setUser(user.displayName, user.email);
-        router.push('/');
-        toast({
+      await signInWithPopup(auth, provider);
+      // onAuthStateChanged will handle the redirect and user state update
+      router.push('/');
+      toast({
           title: "Login Successful!",
-          description: `Welcome back, ${user.displayName}!`,
+          description: `Welcome back!`,
           className: "bg-primary text-primary-foreground",
         });
-      }
     } catch (error: any) {
       if (error.code !== 'auth/popup-closed-by-user') {
         console.error("Google Sign-In Error:", error);

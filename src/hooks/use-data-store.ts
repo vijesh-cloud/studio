@@ -17,10 +17,9 @@ interface EcoVerseState {
   registeredUsers: StoredUser[];
   submissions: Submission[];
   leaderboard: User[];
-  setUser: (name: string, email: string) => void;
-  loginUser: (email: string) => boolean;
+  setUser: (user: User | null) => void;
   loginDeliveryPartner: (username: string, password: string) => boolean;
-  registerUser: (name: string, email: string) => void;
+  addUserToStore: (name: string, email: string) => User;
   updateUser: (updatedData: Partial<User>) => void;
   addSubmission: (submissionData: Omit<Submission, 'id' | 'userId' | 'timestamp' | 'organizerId' | 'status' | 'impact'>, location: Location) => void;
   updateSubmissionStatus: (id: string, status: Submission['status']) => void;
@@ -71,52 +70,18 @@ export const useDataStore = create<EcoVerseState>()(
       submissions: [],
       leaderboard: [],
       registeredUsers: [],
-      setUser: (name, email) => {
-        const resetUser: StoredUser = {
-          id: `user-${Date.now()}`,
-          name,
-          email,
-          avatar: `https://placehold.co/100x100.png`,
-          points: 0,
-          level: 1,
-          streak: 0,
-          lastRecycled: null,
-          badges: [],
-          totalItems: 0,
-          impactStats: { co2Saved: 0, waterSaved: 0, treesEquivalent: 0 },
-        };
+      setUser: (user) => {
+          if (user === null) {
+              set({ user: null, deliveryPartner: null });
+              return;
+          }
 
-        const existingUser = get().registeredUsers.find(u => u.email === email);
-        if (existingUser) {
-            const freshUser = { ...existingUser, ...resetUser, id: existingUser.id, name: existingUser.name };
-            set({ user: freshUser });
-            return;
-        }
-
-        set(state => ({ 
-            user: resetUser, 
-            leaderboard: [...generateFakeUsers(49), resetUser],
-            registeredUsers: [...state.registeredUsers, resetUser]
-        }));
-      },
-      loginUser: (email: string): boolean => {
-        const userToLogin = get().registeredUsers.find(u => u.email === email);
-        if (userToLogin) {
-            // Reset stats on login for a clean slate
-            const freshUser: User = {
-                ...userToLogin,
-                points: 0,
-                level: 1,
-                streak: 0,
-                lastRecycled: null,
-                badges: [],
-                totalItems: 0,
-                impactStats: { co2Saved: 0, waterSaved: 0, treesEquivalent: 0 },
-            };
-            set({ user: freshUser, deliveryPartner: null, submissions: [] });
-            return true;
-        }
-        return false;
+          const existingUser = get().registeredUsers.find(u => u.id === user.id);
+          if (existingUser) {
+              set({ user: existingUser, deliveryPartner: null });
+          } else {
+              set({ user, deliveryPartner: null });
+          }
       },
       loginDeliveryPartner: (username, password) => {
         const partner = DELIVERY_PARTNERS.find(p => p.username === username && p.password === password);
@@ -126,7 +91,14 @@ export const useDataStore = create<EcoVerseState>()(
         }
         return false;
       },
-      registerUser: (name, email) => {
+      addUserToStore: (name, email) => {
+        const existingUser = get().registeredUsers.find(u => u.email === email);
+        if (existingUser) {
+            // This case should ideally be handled by onAuthStateChanged logic
+            // but as a fallback, we return the existing user.
+            return existingUser;
+        }
+
         const newUser: StoredUser = {
           id: `user-${Date.now()}`,
           name,
@@ -145,6 +117,7 @@ export const useDataStore = create<EcoVerseState>()(
             leaderboard: [...generateFakeUsers(49), newUser],
             registeredUsers: [...state.registeredUsers, newUser]
         }));
+        return newUser;
       },
       updateUser: (updatedData) => {
         set(state => {
@@ -440,8 +413,10 @@ export const useDataStore = create<EcoVerseState>()(
       },
     }),
     {
-      name: 'ecoverse-storage-v2', // Changed storage name to force reset
+      name: 'ecoverse-storage-v3', // New version to clear old state
       storage: createJSONStorage(() => localStorage),
     }
   )
 );
+
+    
