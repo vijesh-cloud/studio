@@ -111,30 +111,6 @@ export const EnvironmentalImpactOutputSchema = z.object({
 });
 export type EnvironmentalImpactOutput = z.infer<typeof EnvironmentalImpactOutputSchema>;
 
-// Forgot Password
-export const SendPasswordResetCodeInputSchema = z.object({
-  email: z.string().email().describe('The user\'s email address.'),
-});
-export type SendPasswordResetCodeInput = z.infer<typeof SendPasswordResetCodeInputSchema>;
-
-export const SendPasswordResetCodeOutputSchema = z.object({
-  success: z.boolean(),
-  message: z.string(),
-});
-export type SendPasswordResetCodeOutput = z.infer<typeof SendPasswordResetCodeOutputSchema>;
-
-export const VerifyPasswordResetCodeInputSchema = z.object({
-  email: z.string().email(),
-  code: z.string(), // Can be the oobCode from Firebase
-});
-export type VerifyPasswordResetCodeInput = z.infer<typeof VerifyPasswordResetCodeInputSchema>;
-
-export const VerifyPasswordResetCodeOutputSchema = z.object({
-  success: z.boolean(),
-  message: z.string(),
-});
-export type VerifyPasswordResetCodeOutput = z.infer<typeof VerifyPasswordResetCodeOutputSchema>;
-
 // Personalized Recycling Tips
 export const PersonalizedRecyclingTipsInputSchema = z.object({
   location: z.string().describe('The user’s current location.'),
@@ -156,3 +132,41 @@ export const PersonalizedRecyclingTipsOutputSchema = z.object({
 export type PersonalizedRecyclingTipsOutput = z.infer<
   typeof PersonalizedRecyclingTipsOutputSchema
 >;
+
+// Forgot Password Schemas
+export const SendPasswordResetCodeInputSchema = z.object({
+  email: z.string().email().describe("The user's email address."),
+});
+export type SendPasswordResetCodeInput = z.infer<typeof SendPasswordResetCodeInputSchema>;
+
+export const SendPasswordResetCodeOutputSchema = z.object({
+  success: z.boolean(),
+  message: z.string().optional(),
+});
+export type SendPasswordResetCodeOutput = z.infer<typeof SendPasswordResetCodeOutputSchema>;
+
+
+export const VerifyPasswordResetCodeInputSchema = z.object({
+  email: z.string().email(),
+  code: z.string().length(6, { message: "Code must be 6 digits" }),
+});
+export type VerifyPasswordResetCodeInput = z.infer<typeof VerifyPasswordResetCodeInputSchema>;
+
+export const VerifyPasswordResetCodeOutputSchema = z.object({
+  success: z.boolean(),
+  message: z.string(),
+});
+export type VerifyPasswordResetCodeOutput = z.infer<typeof VerifyPasswordResetCodeOutputSchema>;
+
+export const ConfirmPasswordResetInputSchema = z.object({
+    email: z.string().email(),
+    newPassword: z.string().min(6),
+    code: z.string().length(6),
+});
+export type ConfirmPasswordResetInput = z.infer<typeof ConfirmPasswordResetInputSchema>;
+
+export const ConfirmPasswordResetOutputSchema = z.object({
+    success: z.boolean(),
+    message: z.string(),
+});
+export type ConfirmPasswordResetOutput = z.infer<typeof ConfirmPasswordResetOutputSchema>;

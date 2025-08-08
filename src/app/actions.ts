@@ -4,14 +4,19 @@
 import { classifyWasteItem } from '@/ai/flows/ai-item-classification';
 import { getPersonalizedRecyclingTips } from '@/ai/flows/personalized-recycling-tips';
 import { getEnvironmentalImpact } from '@/ai/flows/environmental-impact';
+import {
+  sendPasswordResetCode,
+  verifyPasswordResetCode,
+  confirmPasswordReset
+} from '@/ai/flows/forgot-password';
 import type { 
     ClassifyWasteItemInput, ClassifyWasteItemOutput,
     PersonalizedRecyclingTipsInput, PersonalizedRecyclingTipsOutput,
     EnvironmentalImpactInput, EnvironmentalImpactOutput,
+    SendPasswordResetCodeInput, SendPasswordResetCodeOutput,
+    VerifyPasswordResetCodeInput, VerifyPasswordResetCodeOutput,
+    ConfirmPasswordResetInput, ConfirmPasswordResetOutput,
 } from '@/lib/types';
-import { auth } from '@/lib/firebase';
-import { sendPasswordResetEmail } from 'firebase/auth';
-
 
 export async function classifyItemAction(
   input: ClassifyWasteItemInput
@@ -62,13 +67,22 @@ export async function getImpactAction(
     }
 }
 
-export async function sendPasswordResetEmailAction(email: string): Promise<{success: boolean; message: string;}> {
-    try {
-        await sendPasswordResetEmail(auth, email);
-        return { success: true, message: 'Password reset email sent successfully.' };
-    } catch (error: any) {
-        console.error('Error sending password reset email:', error);
-        return { success: false, message: error.message || 'Failed to send password reset email.' };
-    }
+
+export async function sendPasswordResetCodeAction(
+  input: SendPasswordResetCodeInput
+): Promise<SendPasswordResetCodeOutput> {
+  return await sendPasswordResetCode(input);
+}
+
+export async function verifyPasswordResetCodeAction(
+  input: VerifyPasswordResetCodeInput
+): Promise<VerifyPasswordResetCodeOutput> {
+  return await verifyPasswordResetCode(input);
+}
+
+export async function confirmPasswordResetAction(
+    input: ConfirmPasswordResetInput
+): Promise<ConfirmPasswordResetOutput> {
+    return await confirmPasswordReset(input);
 }
     
