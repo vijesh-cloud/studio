@@ -1,3 +1,4 @@
+
 'use client';
 
 import type { User } from "@/lib/types";
@@ -31,10 +32,7 @@ export function LeaderboardList({ users, currentUser, category }: LeaderboardLis
                   <div className="flex items-center gap-2 w-10">
                     {rankIcon}
                   </div>
-                  <Avatar>
-                    <AvatarImage src={user.avatar} alt={user.name} data-ai-hint="person avatar"/>
-                    <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
-                  </Avatar>
+                  
                   <div className="flex-grow">
                     <p className={cn("font-semibold", isCurrentUser && "text-primary")}>{user.name}</p>
                     <p className="text-sm text-muted-foreground">Level {user.level}</p>
