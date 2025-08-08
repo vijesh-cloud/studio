@@ -414,7 +414,7 @@ export const useDataStore = create<EcoVerseState>()(
       },
     }),
     {
-      name: 'ecoverse-storage-v3', // New version to clear old state
+      name: 'ecoverse-storage-v4', // New version to clear old state
       storage: createJSONStorage(() => localStorage),
     }
   )
