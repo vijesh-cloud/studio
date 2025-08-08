@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useDataStore } from '@/hooks/use-data-store';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -15,17 +15,25 @@ import { LocationService } from '@/lib/location';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
+import { LanguagePreferenceModal } from '@/components/LanguagePreferenceModal';
 
 export default function HomePage() {
-  const { user, submissions } = useDataStore();
+  const { user, submissions, updateUser } = useDataStore();
   const [tips, setTips] = useState('');
   const [locationCity, setLocationCity] = useState('your city');
+  const [isLanguageModalOpen, setIsLanguageModalOpen] = useState(false);
   const router = useRouter();
+  
+  // Memoize submissions to avoid re-renders
+  const memoizedSubmissions = useMemo(() => submissions, [submissions]);
 
   useEffect(() => {
     const checkUser = () => {
       if (!user) {
         router.push('/login');
+      } else if (!user.languagePreference) {
+        // Only show modal if user exists and has no language preference
+        setIsLanguageModalOpen(true);
       }
     };
     // Delay check to allow store hydration
@@ -41,7 +49,7 @@ export default function HomePage() {
           const { city } = LocationService.getAddress(lat, lng);
           setLocationCity(city);
 
-          const recyclingHistory = submissions.slice(0, 5).map(s => s.itemType).join(', ') || 'No items recycled yet.';
+          const recyclingHistory = memoizedSubmissions.slice(0, 5).map(s => s.itemType).join(', ') || 'No items recycled yet.';
           const tipsResult = await getTipsAction({ location: city, recyclingHistory });
           setTips(tipsResult.tips);
         } catch (error) {
@@ -50,7 +58,11 @@ export default function HomePage() {
       }
     }
     fetchLocationAndTips();
-  }, [user, submissions]);
+  }, [user, memoizedSubmissions]);
+  
+  const handleCloseModal = () => {
+    setIsLanguageModalOpen(false);
+  };
 
   if (!user) {
     return (
@@ -71,6 +83,7 @@ export default function HomePage() {
 
   return (
     <div className="p-4 space-y-6">
+       <LanguagePreferenceModal isOpen={isLanguageModalOpen} onClose={handleCloseModal} />
       <Link href="/profile">
         <Card className="bg-gradient-to-br from-primary to-secondary text-primary-foreground border-none shadow-xl hover:shadow-2xl transition-shadow">
           <CardHeader>
@@ -160,9 +173,9 @@ export default function HomePage() {
         </CardHeader>
         <CardContent>
           <ScrollArea className="h-[200px] w-full">
-             {submissions.length > 0 ? (
+             {memoizedSubmissions.length > 0 ? (
                 <div className="space-y-4">
-                  {submissions.slice(0, 5).map(sub => (
+                  {memoizedSubmissions.slice(0, 5).map(sub => (
                     <div key={sub.id} className="flex items-center gap-4">
                        <Image src={sub.photo} alt={sub.itemType} width={40} height={40} className="rounded-md object-cover w-10 h-10" />
                       <div className="flex-grow">

@@ -111,6 +111,7 @@ export const useDataStore = create<EcoVerseState>()(
           badges: [],
           totalItems: 0,
           impactStats: { co2Saved: 0, waterSaved: 0, treesEquivalent: 0 },
+          languagePreference: undefined,
         };
          set(state => ({ 
             user: newUser, 

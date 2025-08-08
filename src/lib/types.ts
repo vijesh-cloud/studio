@@ -18,6 +18,7 @@ export interface User {
   badges: string[];
   totalItems: number;
   impactStats: EnvironmentalImpact;
+  languagePreference?: string;
 }
 
 export interface Location {
