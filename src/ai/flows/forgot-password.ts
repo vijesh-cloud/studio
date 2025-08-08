@@ -44,7 +44,21 @@ const sendPasswordResetCodeFlow = ai.defineFlow(
     outputSchema: SendPasswordResetCodeOutputSchema,
   },
   async (input) => {
-    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    // Use Gemini to generate the code
+    const { text } = await ai.generate({
+        prompt: `Generate a secure 6-digit password reset code. The code must be exactly 6 digits and contain only numbers. Do not include any other text or explanation in your response, only the code.`,
+        config: {
+            temperature: 1.0, // Increase randomness
+        }
+    });
+
+    const code = text.replace(/\D/g, ''); // Ensure it's only digits
+
+    if (code.length !== 6) {
+        console.error('AI failed to generate a valid 6-digit code. Fallback required.');
+        throw new Error('Failed to generate a secure verification code.');
+    }
+
     const expires = Date.now() + 10 * 60 * 1000; // 10 minutes
 
     codeStore[input.email] = { code, expires };
