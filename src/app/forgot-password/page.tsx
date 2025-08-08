@@ -72,7 +72,7 @@ export default function ForgotPasswordPage() {
             </Link>
             <CardTitle className="text-2xl text-center">Forgot Password</CardTitle>
             <CardDescription className="text-center pt-2">
-              Enter your email and we'll simulate sending a password reset link.
+              Enter your email to proceed to the next step. No email will be sent.
             </CardDescription>
           </CardHeader>
           <CardContent className="grid gap-4">
