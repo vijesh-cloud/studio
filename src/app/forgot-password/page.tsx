@@ -16,8 +16,7 @@ import { Label } from '@/components/ui/label';
 import { Recycle, ArrowLeft, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
-import { sendPasswordResetCodeAction } from '@/app/actions';
-import { useRouter } from 'next/navigation';
+import { sendPasswordResetAction } from '@/app/actions';
 import { useDataStore } from '@/hooks/use-data-store';
 
 
@@ -25,7 +24,6 @@ export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
-  const router = useRouter();
   const { registeredUsers } = useDataStore();
 
   const handleSendLink = async () => {
@@ -47,18 +45,17 @@ export default function ForgotPasswordPage() {
     setIsLoading(true);
 
     try {
-        const result = await sendPasswordResetCodeAction({ email });
+        const result = await sendPasswordResetAction(email);
         
         if (result.success) {
             toast({
-                title: 'Verification Code Sent',
-                description: 'Check your inbox for a code to reset your password.',
+                title: 'Password Reset Email Sent',
+                description: 'Please check your inbox for a link to reset your password.',
                 className: 'bg-primary text-primary-foreground',
             });
-            router.push(`/reset-password?email=${encodeURIComponent(email)}`);
         } else {
             toast({
-                title: 'Failed to Send Code',
+                title: 'Failed to Send Email',
                 description: result.message || 'An unexpected error occurred.',
                 variant: 'destructive',
             });
@@ -66,7 +63,7 @@ export default function ForgotPasswordPage() {
     } catch(error: any) {
         toast({
             title: 'Error',
-            description: error.message || 'Failed to send password reset code.',
+            description: error.message || 'Failed to send password reset email.',
             variant: 'destructive',
         });
     } finally {
@@ -89,7 +86,7 @@ export default function ForgotPasswordPage() {
             </Link>
             <CardTitle className="text-2xl text-center">Forgot Password</CardTitle>
             <CardDescription className="text-center pt-2">
-              Enter your email and we'll send you a verification code to get back into your account.
+              Enter your email and we'll send you a link to get back into your account.
             </CardDescription>
           </CardHeader>
           <CardContent className="grid gap-4">
@@ -109,7 +106,7 @@ export default function ForgotPasswordPage() {
           <CardFooter className="flex flex-col gap-4">
             <Button className="w-full" onClick={handleSendLink} disabled={isLoading}>
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Send Verification Code
+              Send Reset Link
             </Button>
             <Link href="/login" className="text-sm underline">
               Back to login
