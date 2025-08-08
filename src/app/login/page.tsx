@@ -18,7 +18,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useDataStore } from '@/hooks/use-data-store';
 import { auth } from '@/lib/firebase';
-import { GoogleAuthProvider, signInWithPopup, sendPasswordResetEmail } from 'firebase/auth';
+import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
@@ -108,29 +108,6 @@ export default function LoginPage() {
     }
   };
 
-  const handleForgotPassword = async () => {
-    if (!email) {
-      toast({ title: "Please enter your email address to reset password.", variant: "destructive" });
-      return;
-    }
-    try {
-      await sendPasswordResetEmail(auth, email);
-      toast({
-        title: "Password Reset Email Sent",
-        description: "Please check your inbox (and spam folder) for a link to reset your password.",
-        className: "bg-primary text-primary-foreground",
-        duration: 9000,
-      });
-    } catch (error: any) {
-      console.error("Forgot Password Error:", error);
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
-  };
-
   return (
     <div className="flex items-center justify-center min-h-screen bg-muted/40">
       <div className="w-full max-w-md p-4">
@@ -205,8 +182,8 @@ export default function LoginPage() {
                   </div>
                 </div>
                 <div className="flex items-center">
-                    <Button variant="link" className="px-0" onClick={handleForgotPassword}>
-                        Forgot password?
+                    <Button variant="link" className="px-0" asChild>
+                       <Link href="/forgot-password">Forgot password?</Link>
                     </Button>
                 </div>
               </CardContent>
