@@ -47,8 +47,8 @@ export default function MarketPage() {
                 <CardContent className="p-3">
                     <h3 className="font-semibold capitalize truncate">{item.itemType}</h3>
                     <p className="text-xs text-muted-foreground">{item.location.city}</p>
-                    <Link href={`/order-confirmation/${item.id}`} passHref legacyBehavior>
-                      <Button asChild className="w-full mt-2" size="sm"><a href={`/order-confirmation/${item.id}`}>Claim Item</a></Button>
+                    <Link href={`/order-confirmation/${item.id}`} passHref>
+                      <Button asChild className="w-full mt-2" size="sm"><a>Claim Item</a></Button>
                     </Link>
                 </CardContent>
             </Card>
