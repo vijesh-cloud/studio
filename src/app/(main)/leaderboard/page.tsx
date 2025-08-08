@@ -6,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useRouter } from 'next/navigation';
 import { LeaderboardList } from '@/components/LeaderboardList';
-import { Gift, Users, Globe } from 'lucide-react';
+import { Users, Globe } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 export default function LeaderboardPage() {
@@ -20,7 +20,10 @@ export default function LeaderboardPage() {
         return;
       }
       if(submissions.length > 0) {
-          setCurrentUserCity(submissions[0].location.city);
+          const userSubmission = submissions.find(s => s.userId === user.id);
+          if (userSubmission) {
+            setCurrentUserCity(userSubmission.location.city);
+          }
       }
   }, [user, router, submissions]);
 
@@ -37,7 +40,7 @@ export default function LeaderboardPage() {
   }
   
   // Neighborhood: Only the current user
-  const neighborhoodUsers = [user];
+  const neighborhoodUsers = leaderboard.filter(u => u.id === user.id);
 
   // City & Global are the full list, which will be dynamic
   const cityUsers = leaderboard;
@@ -53,18 +56,6 @@ export default function LeaderboardPage() {
         </CardHeader>
       </Card>
       
-      <Card className="bg-accent/30">
-        <CardHeader className="p-4">
-          <CardTitle>
-            <div className="flex items-center gap-2 text-base">
-              <Gift className="text-primary" />
-              <span>Weekly Challenge</span>
-            </div>
-          </CardTitle>
-            <CardDescription className="text-sm">Recycle 3 plastic bottles and 2 paper items this week for a 100 point bonus!</CardDescription>
-        </CardHeader>
-      </Card>
-
       <Tabs defaultValue="neighborhood" className="w-full">
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="neighborhood"><Users className="w-4 h-4 mr-1 inline-block"/> Neighborhood</TabsTrigger>
