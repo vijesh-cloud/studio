@@ -418,5 +418,3 @@ export const useDataStore = create<EcoVerseState>()(
     }
   )
 );
-
-    
