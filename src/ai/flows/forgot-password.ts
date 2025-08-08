@@ -9,7 +9,7 @@
  */
 
 import { ai } from '@/ai/genkit';
-import { z } from 'genkit';
+import { z } from 'zod';
 import * as nodemailer from 'nodemailer';
 import { 
     SendPasswordResetCodeInputSchema, 
@@ -49,20 +49,18 @@ const sendPasswordResetCodeFlow = ai.defineFlow(
 
     // In a real app, you would not use a mock SMTP service like this.
     // You would use a transactional email service (e.g., SendGrid, Mailgun).
-    // This uses ethereal.email for a temporary, free SMTP server for testing.
+    // This uses a pre-configured Gmail account for testing.
     const transporter = nodemailer.createTransport({
-      host: 'smtp.ethereal.email',
-      port: 587,
-      secure: false, // true for 465, false for other ports
-      auth: {
-        user: 'reese.eichmann20@ethereal.email', // Generated ethereal user
-        pass: 'HkGFQ5Nswq2P5nC2S7', // Generated ethereal password
-      },
+        service: 'gmail',
+        auth: {
+            user: 'ecoverse.firebase.studio@gmail.com',
+            pass: 'cskv czjg jbjt swnx'
+        }
     });
 
     try {
       const info = await transporter.sendMail({
-        from: `"EcoVerse Support" <${FROM_EMAIL}>`,
+        from: `"EcoVerse Support" <ecoverse.firebase.studio@gmail.com>`,
         to: input.email,
         subject: 'Your EcoVerse Password Reset Code',
         text: `Your password reset code is: ${code}`,
@@ -70,8 +68,6 @@ const sendPasswordResetCodeFlow = ai.defineFlow(
       });
 
       console.log('Message sent: %s', info.messageId);
-      // You can see the preview URL in the console logs when running locally
-      console.log('Preview URL: %s', nodemailer.getTestMessageUrl(info));
 
       return {
         success: true,
